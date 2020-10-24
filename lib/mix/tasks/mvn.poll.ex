@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Poll do
+defmodule Mix.Tasks.Mvn.Poll do
   @moduledoc """
     Mix task for starting polling updates
   """
