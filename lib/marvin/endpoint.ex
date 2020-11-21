@@ -7,7 +7,10 @@ defmodule Marvin.Endpoint do
   @doc false
   defmacro __using__(opts) do
     quote do
+      import Marvin.Endpoint
       @behaviour Marvin.Endpoint
+
+      @before_compile Marvin.Endpoint
 
       unquote(config(opts))
       unquote(server())
@@ -17,6 +20,8 @@ defmodule Marvin.Endpoint do
   defp config(opts) do
     quote do
       @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
+
+      Module.register_attribute(__MODULE__, :marvin_pollers, accumulate: true)
     end
   end
 
@@ -40,6 +45,20 @@ defmodule Marvin.Endpoint do
       def start_link(opts \\ []) do
         Marvin.Endpoint.Supervisor.start_link(@otp_app, __MODULE__, opts)
       end
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    pollers = Module.get_attribute(env.module, :marvin_pollers)
+
+    quote do
+      def __pollers__(), do: unquote(Macro.escape(pollers))
+    end
+  end
+
+  defmacro poller(mod, opts \\ []) do
+    quote do
+      @marvin_pollers {unquote(mod), unquote(opts)}
     end
   end
 end

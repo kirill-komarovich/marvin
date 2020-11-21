@@ -6,7 +6,6 @@ defmodule Marvin.Endpoint.Supervisor do
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod, opts \\ []) do
-    IO.puts "Endpoint sup started"
     case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
       {:ok, _} = ok ->
         ok
@@ -15,11 +14,23 @@ defmodule Marvin.Endpoint.Supervisor do
     end
   end
 
-
   def init({otp_app, mod, opts}) do
-    IO.puts "Endpoint init started"
-    children = []
+    children = pollers_children(mod, polling?())
 
     Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  defp pollers_children(endpoint, polling?) do
+    if polling? do
+      Enum.map(endpoint.__pollers__(), fn {poller, opts} ->
+        poller.child_spec([endpoint: endpoint] ++ opts)
+      end)
+    else
+      []
+    end
+  end
+
+  def polling? do
+    Application.get_env(:marvin, :serve_endpoints, false)
   end
 end
