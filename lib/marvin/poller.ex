@@ -3,6 +3,8 @@ defmodule Marvin.Poller do
 
   """
 
+  alias Marvin.Event
+
   @doc false
   defmacro __using__(opts) do
     quote do
@@ -16,6 +18,7 @@ defmodule Marvin.Poller do
       require Logger
 
       use GenServer
+      import Marvin.Poller
 
       opts = unquote(opts)
 
@@ -53,8 +56,8 @@ defmodule Marvin.Poller do
       @impl true
       def handle_info(:poll, %{endpoint: endpoint} = state) do
         case apply(@adapter, :get_updates, [state]) do
-          {:ok, updates} -> IO.inspect updates
-          {:error, reason} -> IO.inspect reason
+          {:ok, updates} -> process_updates(endpoint, updates)
+          {:error, error} -> process_error(error)
         end
 
         trigger_poll()
@@ -62,6 +65,16 @@ defmodule Marvin.Poller do
         {:noreply, state}
       end
     end
+  end
+
+  def process_updates(endpoint, updates) when is_list(updates) do
+    Enum.each(updates, fn update ->
+      IO.inspect Event.to_event(update)
+    end)
+  end
+
+  def process_error(error) do
+    IO.inspect error
   end
 
   def __child_spec__(handler, opts) do
