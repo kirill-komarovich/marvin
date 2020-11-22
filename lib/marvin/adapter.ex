@@ -7,7 +7,7 @@ defmodule Marvin.Adapter do
       @name unquote(opts[:name]) || __MODULE__
 
       def name do
-        @name |> to_string() |> String.split(".") |> List.last |> String.capitalize
+        @name |> to_string() |> String.split(".") |> List.last() |> String.capitalize()
       end
     end
   end

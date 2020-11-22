@@ -13,7 +13,7 @@ defmodule Marvin.Matcher do
 
   defmacro __using__(_opts) do
     quote do
-      Module.register_attribute __MODULE__, :handlers, accumulate: true
+      Module.register_attribute(__MODULE__, :handlers, accumulate: true)
 
       import unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
@@ -21,7 +21,7 @@ defmodule Marvin.Matcher do
   end
 
   defmacro __before_compile__(env) do
-    handlers = env.module |> Module.get_attribute(:handlers) |> Enum.reverse
+    handlers = env.module |> Module.get_attribute(:handlers) |> Enum.reverse()
 
     quote do
       def call(event) do
@@ -40,7 +40,9 @@ defmodule Marvin.Matcher do
   end
 
   def do_match(handlers, event) do
-    {pattern, handler} = Enum.find(handlers, fn {pattern, _} -> Regex.match?(pattern, event.text) end)
+    {pattern, handler} =
+      Enum.find(handlers, fn {pattern, _} -> Regex.match?(pattern, event.text) end)
+
     handler
   end
 end

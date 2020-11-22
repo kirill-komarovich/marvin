@@ -13,7 +13,7 @@ defmodule Marvin.Processor do
 
   defp config(opts) do
     quote do
-      @matcher unquote(opts)[:matcher] || raise "processor expects :matcher to be given"
+      @matcher unquote(opts)[:matcher] || raise("processor expects :matcher to be given")
     end
   end
 

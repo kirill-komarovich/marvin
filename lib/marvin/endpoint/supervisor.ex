@@ -9,6 +9,7 @@ defmodule Marvin.Endpoint.Supervisor do
     case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
       {:ok, _} = ok ->
         ok
+
       {:error, _} = error ->
         error
     end

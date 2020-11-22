@@ -2,7 +2,7 @@ defmodule Marvin.Endpoint do
   @doc """
   Starts the endpoint supervision tree.
   """
-  @callback start_link() :: Supervisor.on_start
+  @callback start_link() :: Supervisor.on_start()
 
   @doc false
   defmacro __using__(opts) do
@@ -19,7 +19,7 @@ defmodule Marvin.Endpoint do
 
   defp config(opts) do
     quote do
-      @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
+      @otp_app unquote(opts)[:otp_app] || raise("endpoint expects :otp_app to be given")
 
       Module.register_attribute(__MODULE__, :marvin_pollers, accumulate: true)
     end
@@ -52,6 +52,12 @@ defmodule Marvin.Endpoint do
     pollers = Module.get_attribute(env.module, :marvin_pollers)
 
     quote do
+      defoverridable call: 2
+
+      # Inline render errors so we set the endpoint before calling it.
+      def call(event, opts) do
+      end
+
       def __pollers__(), do: unquote(Macro.escape(pollers))
     end
   end
