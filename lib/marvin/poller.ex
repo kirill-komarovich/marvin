@@ -8,6 +8,8 @@ defmodule Marvin.Poller do
   @doc false
   defmacro __using__(opts) do
     quote do
+      import Marvin.Poller
+
       unquote(config(opts))
       unquote(poller())
     end
@@ -18,11 +20,10 @@ defmodule Marvin.Poller do
       require Logger
 
       use GenServer
-      import Marvin.Poller
 
       opts = unquote(opts)
 
-      @adapter opts[:adapter] || raise "poller expects :adapter to be given"
+      @adapter opts[:adapter] || raise("poller expects :adapter to be given")
       @timeout opts[:timeout] || 1000
 
       def start_link(endpoint, opts \\ []) do
@@ -56,7 +57,7 @@ defmodule Marvin.Poller do
       @impl true
       def handle_info(:poll, %{endpoint: endpoint} = state) do
         case apply(@adapter, :get_updates, [state]) do
-          {:ok, updates} -> process_updates(endpoint, updates)
+          {:ok, updates} -> process_updates(endpoint, @adapter, updates)
           {:error, error} -> process_error(error)
         end
 
@@ -67,14 +68,15 @@ defmodule Marvin.Poller do
     end
   end
 
-  def process_updates(endpoint, updates) when is_list(updates) do
+  def process_updates(endpoint, adapter, updates) when is_list(updates) do
     Enum.each(updates, fn update ->
-      IO.inspect Event.to_event(update)
+      event = apply(adapter, :event, [update])
+      IO.inspect(event)
     end)
   end
 
   def process_error(error) do
-    IO.inspect error
+    IO.inspect(error)
   end
 
   def __child_spec__(handler, opts) do

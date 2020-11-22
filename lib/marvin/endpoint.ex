@@ -52,11 +52,10 @@ defmodule Marvin.Endpoint do
     pollers = Module.get_attribute(env.module, :marvin_pollers)
 
     quote do
-      defoverridable call: 2
-
-      # Inline render errors so we set the endpoint before calling it.
       def call(event, opts) do
       end
+
+      defoverridable call: 2
 
       def __pollers__(), do: unquote(Macro.escape(pollers))
     end
