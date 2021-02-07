@@ -33,6 +33,7 @@ defmodule Marvin.Matcher do
     end
   end
 
+  # TODO: Better handlers
   defmacro handle(pattern, handler) do
     quote do
       @handlers {unquote(Macro.escape(pattern)), unquote(Macro.escape(handler))}
@@ -40,9 +41,12 @@ defmodule Marvin.Matcher do
   end
 
   def do_match(handlers, event) do
-    {pattern, handler} =
-      Enum.find(handlers, fn {pattern, _} -> Regex.match?(pattern, event.text) end)
+    with {_, handler} <- find_handler(handlers, event) do
+      handler
+    end
+  end
 
-    handler
+  defp find_handler(handlers, event) do
+    Enum.find(handlers, fn {pattern, _} -> Regex.match?(pattern, event.text) end)
   end
 end

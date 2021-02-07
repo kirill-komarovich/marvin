@@ -56,18 +56,24 @@ defmodule Marvin.Endpoint do
 
     quote do
       def call(event) do
-        handler = __matcher__().call(event)
-        Logger.info("Processing #{event.adapter.name()} update by #{handler}")
-
-        {ums, _} = :timer.tc(handler, :call, [event])
-
-        Logger.info("Finished in #{formatted_diff(ums)}")
+        case __matcher__().call(event) do
+          nil -> Logger.info("Can't find handler") # TODO: Better process of unknown events
+          handler -> process_event(handler, event)
+        end
       end
 
       defoverridable call: 1
 
       def __pollers__(), do: unquote(Macro.escape(pollers))
       def __matcher__(), do: unquote(Macro.escape(matcher))
+
+      defp process_event(handler, event) do
+        Logger.info("Processing #{event.adapter.name()} update by #{handler}")
+
+        {ums, _} = :timer.tc(handler, :call, [event])
+
+        Logger.info("Finished in #{formatted_diff(ums)}")
+      end
 
       defp formatted_diff(diff) when diff > 1000, do: [to_string(diff / 1000), "ms"]
       defp formatted_diff(diff), do: [to_string(diff), "µs"]
