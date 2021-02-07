@@ -30,13 +30,11 @@ defmodule Marvin.Poller do
         GenServer.start_link(__MODULE__, {endpoint, opts}, name: @adapter)
       end
 
-      def trigger_poll, do: Process.send_after(self(), :poll, @timeout)
-
       @impl true
       def init({endpoint, _opts}) do
         Logger.info("Start poll with #{adapter_name()}")
 
-        trigger_poll()
+        :timer.send_interval(@timeout, :poll)
 
         {:ok, %{endpoint: endpoint}}
       end
@@ -60,8 +58,6 @@ defmodule Marvin.Poller do
           {:ok, updates} -> process_updates(endpoint, @adapter, updates)
           {:error, error} -> process_error(error)
         end
-
-        trigger_poll()
 
         {:noreply, state}
       end
