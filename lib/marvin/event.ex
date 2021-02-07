@@ -17,4 +17,8 @@ defmodule Marvin.Event do
     :text,
     assigns: %{}
   ]
+
+  def send_message(event = %__MODULE__{adapter: adapter} = event, text, opts \\ []) do
+    adapter.send_message(event, text, opts)
+  end
 end
