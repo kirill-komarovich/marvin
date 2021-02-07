@@ -11,6 +11,23 @@ defmodule Marvin.Matcher do
     end
   """
 
+  defprotocol Matcherable do
+    @spec match?(pattern :: term, event :: Marvin.Event.t()) :: boolean()
+    def match?(pattern, event)
+  end
+
+  defimpl Matcherable, for: Regex do
+    def match?(pattern, %Marvin.Event{text: text}) do
+      Regex.match?(pattern, text)
+    end
+  end
+
+  defimpl Matcherable, for: BitString do
+    def match?(pattern, %Marvin.Event{text: text}) do
+      String.contains?(text, pattern)
+    end
+  end
+
   defmacro __using__(_opts) do
     quote do
       Module.register_attribute(__MODULE__, :handlers, accumulate: true)
@@ -33,7 +50,6 @@ defmodule Marvin.Matcher do
     end
   end
 
-  # TODO: Better handlers
   defmacro handle(pattern, handler) do
     quote do
       @handlers {unquote(Macro.escape(pattern)), unquote(Macro.escape(handler))}
@@ -41,12 +57,8 @@ defmodule Marvin.Matcher do
   end
 
   def do_match(handlers, event) do
-    with {_, handler} <- find_handler(handlers, event) do
-      handler
-    end
-  end
-
-  defp find_handler(handlers, event) do
-    Enum.find(handlers, fn {pattern, _} -> Regex.match?(pattern, event.text) end)
+    Enum.find_value(handlers, fn {pattern, handler} ->
+      if Matcherable.match?(pattern, event), do: handler
+    end)
   end
 end
