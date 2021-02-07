@@ -10,6 +10,7 @@ defmodule Marvin.Adapter.Telegram do
   def event(event) do
     %Marvin.Event{
       adapter: Marvin.Adapter.Telegram,
+      text: event.message.text,
       raw_event: event
     }
   end

@@ -7,6 +7,7 @@ defmodule Marvin.Endpoint do
   @doc false
   defmacro __using__(opts) do
     quote do
+      require Logger
       import Marvin.Endpoint
       @behaviour Marvin.Endpoint
 
@@ -22,6 +23,7 @@ defmodule Marvin.Endpoint do
       @otp_app unquote(opts)[:otp_app] || raise("endpoint expects :otp_app to be given")
 
       Module.register_attribute(__MODULE__, :marvin_pollers, accumulate: true)
+      Module.register_attribute(__MODULE__, :marvin_matcher, [])
     end
   end
 
@@ -50,20 +52,37 @@ defmodule Marvin.Endpoint do
 
   defmacro __before_compile__(env) do
     pollers = Module.get_attribute(env.module, :marvin_pollers)
+    matcher = Module.get_attribute(env.module, :marvin_matcher)
 
     quote do
-      def call(event, opts) do
+      def call(event) do
+        handler = __matcher__().call(event)
+        Logger.info("Processing #{event.adapter.name()} update by #{handler}")
+
+        {ums, _} = :timer.tc(handler, :call, [event])
+
+        Logger.info("Finished in #{formatted_diff(ums)}")
       end
 
-      defoverridable call: 2
+      defoverridable call: 1
 
       def __pollers__(), do: unquote(Macro.escape(pollers))
+      def __matcher__(), do: unquote(Macro.escape(matcher))
+
+      defp formatted_diff(diff) when diff > 1000, do: [to_string(diff / 1000), "ms"]
+      defp formatted_diff(diff), do: [to_string(diff), "µs"]
     end
   end
 
   defmacro poller(mod, opts \\ []) do
     quote do
       @marvin_pollers {unquote(mod), unquote(opts)}
+    end
+  end
+
+  defmacro matcher(mod) do
+    quote do
+      @marvin_matcher unquote(mod)
     end
   end
 end

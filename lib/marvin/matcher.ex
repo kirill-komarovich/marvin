@@ -15,8 +15,8 @@ defmodule Marvin.Matcher do
     quote do
       Module.register_attribute(__MODULE__, :handlers, accumulate: true)
 
-      import unquote(__MODULE__)
-      @before_compile unquote(__MODULE__)
+      import Marvin.Matcher
+      @before_compile Marvin.Matcher
     end
   end
 

@@ -67,7 +67,8 @@ defmodule Marvin.Poller do
   def process_updates(endpoint, adapter, updates) when is_list(updates) do
     Enum.each(updates, fn update ->
       event = apply(adapter, :event, [update])
-      IO.inspect(event)
+      # TODO: spawn process for each update?
+      endpoint.call(event)
     end)
   end
 
