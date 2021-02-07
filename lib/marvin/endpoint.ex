@@ -57,7 +57,8 @@ defmodule Marvin.Endpoint do
     quote do
       def call(event) do
         case __matcher__().call(event) do
-          nil -> Logger.info("Can't find handler") # TODO: Better process of unknown events
+          # TODO: Better process of unknown events
+          nil -> Logger.info("Can't find handler")
           handler -> process_event(handler, event)
         end
       end

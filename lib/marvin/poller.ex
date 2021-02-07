@@ -58,6 +58,7 @@ defmodule Marvin.Poller do
             new_state = update_state(state, updates)
 
             {:noreply, new_state}
+
           {:error, error} ->
             process_error(error)
 
