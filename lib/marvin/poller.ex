@@ -32,14 +32,12 @@ defmodule Marvin.Poller do
 
       @impl true
       def init({endpoint, _opts}) do
-        Logger.info("Start poll with #{adapter_name()}")
+        Logger.info("Start poll with #{apply(@adapter, :name, [])}")
 
         :timer.send_interval(@timeout, :poll)
 
         {:ok, %{endpoint: endpoint}}
       end
-
-      defp adapter_name, do: apply(@adapter, :name, [])
 
       defoverridable init: 1
     end
@@ -55,16 +53,25 @@ defmodule Marvin.Poller do
       @impl true
       def handle_info(:poll, %{endpoint: endpoint} = state) do
         case apply(@adapter, :get_updates, [state]) do
-          {:ok, updates} -> process_updates(endpoint, @adapter, updates)
-          {:error, error} -> process_error(error)
-        end
+          {:ok, updates} ->
+            process_updates(endpoint, @adapter, updates)
+            new_state = update_state(state, updates)
 
-        {:noreply, state}
+            {:noreply, new_state}
+          {:error, error} ->
+            process_error(error)
+
+            {:noreply, state}
+        end
       end
+
+      def update_state(state, _updates), do: state
+
+      defoverridable update_state: 2
     end
   end
 
-  def process_updates(endpoint, adapter, updates) when is_list(updates) do
+  def process_updates(endpoint, adapter, updates \\ []) do
     Enum.each(updates, fn update ->
       event = apply(adapter, :event, [update])
       # TODO: spawn process for each update?
