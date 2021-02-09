@@ -1,6 +1,5 @@
 defmodule Marvin.PollerTest do
   use ExUnit.Case, async: true
-  import ExUnit.CaptureLog
 
   defmodule Endpoint do
     use Marvin.Endpoint, otp_app: :marvin
