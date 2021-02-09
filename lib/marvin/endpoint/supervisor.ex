@@ -1,6 +1,7 @@
 defmodule Marvin.Endpoint.Supervisor do
   require Logger
   use Supervisor
+  alias Marvin.Event
 
   @doc """
   Starts the endpoint supervision tree.
@@ -16,9 +17,13 @@ defmodule Marvin.Endpoint.Supervisor do
   end
 
   def init({otp_app, mod, opts}) do
-    children = pollers_children(mod, polling?())
+    children = event_children() ++ pollers_children(mod, polling?())
 
     Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  defp event_children do
+    [Event.Supervisor.child_spec()]
   end
 
   defp pollers_children(endpoint, polling?) do
