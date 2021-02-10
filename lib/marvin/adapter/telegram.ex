@@ -26,7 +26,8 @@ defmodule Marvin.Adapter.Telegram do
   @impl true
   def event(event) do
     %Marvin.Event{
-      adapter: Marvin.Adapter.Telegram,
+      __adapter__: __MODULE__,
+      platform: :telegram,
       text: event.message.text,
       raw_event: event
     }

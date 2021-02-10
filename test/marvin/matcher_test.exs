@@ -25,9 +25,9 @@ defmodule Marvin.MatcherTest do
   defmodule Matcher do
     use Marvin.Matcher
 
-    handle ~r/test_regex/, RegexHandler
-    handle "test_string", StringHandler
-    handle CustomMatcher, CustomHandler
+    handle(~r/test_regex/, RegexHandler)
+    handle("test_string", StringHandler)
+    handle(CustomMatcher, CustomHandler)
   end
 
   test "__handlers__/0 returns all registered handlers with patterns" do

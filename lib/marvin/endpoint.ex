@@ -55,29 +55,28 @@ defmodule Marvin.Endpoint do
     matcher = Module.get_attribute(env.module, :marvin_matcher)
 
     quote do
+      @event_prefix [:marvin, :endpoint]
+
       def call(event) do
-        case __matcher__().call(event) do
-          # TODO: Better process of unknown events
-          nil -> Logger.info("Can't find handler")
-          handler -> process_event(handler, event)
-        end
+        start_time = System.monotonic_time()
+        metadata = %{event: event}
+
+        :telemetry.execute(
+          @event_prefix ++ [:start],
+          %{system_time: System.system_time()},
+          metadata
+        )
+
+        unquote(matcher).call(event)
+
+        duration = System.monotonic_time() - start_time
+        :telemetry.execute(@event_prefix ++ [:stop], %{duration: duration}, %{event: event})
       end
 
       defoverridable call: 1
 
       def __pollers__(), do: unquote(Macro.escape(pollers))
       def __matcher__(), do: unquote(Macro.escape(matcher))
-
-      defp process_event(handler, event) do
-        Logger.info("Processing #{event.adapter.name()} update by #{handler}")
-
-        {ums, _} = :timer.tc(handler, :call, [event])
-
-        Logger.info("Finished in #{formatted_diff(ums)}")
-      end
-
-      defp formatted_diff(diff) when diff > 1000, do: [to_string(diff / 1000), "ms"]
-      defp formatted_diff(diff), do: [to_string(diff), "µs"]
     end
   end
 

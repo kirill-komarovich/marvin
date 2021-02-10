@@ -11,6 +11,22 @@ defmodule Marvin.Matcher do
     end
   """
 
+  defmodule NoHandlerError do
+    @moduledoc """
+    Exception raised when no handler is found.
+    """
+    defexception message: "no handler found", event: nil
+
+    def exception(opts) do
+      event = Keyword.fetch!(opts, :event)
+
+      %NoHandlerError{
+        message: "no handler found for #{event.platform} message: #{event.text}",
+        event: event
+      }
+    end
+  end
+
   defprotocol Matcherable do
     @spec match?(pattern :: term, event :: Marvin.Event.t()) :: boolean()
     def match?(pattern, event)
@@ -34,6 +50,22 @@ defmodule Marvin.Matcher do
 
       import Marvin.Matcher
       @before_compile Marvin.Matcher
+
+      unquote(match_dispatch())
+    end
+  end
+
+  defp match_dispatch do
+    quote location: :keep do
+      def call(event) do
+        %{text: text} = event
+
+        case match_handler(event) do
+          # TODO: handle exception with UnknownHandler?
+          nil -> raise NoHandlerError, event: event
+          handler -> Marvin.Matcher.__call__(event, handler)
+        end
+      end
     end
   end
 
@@ -41,24 +73,38 @@ defmodule Marvin.Matcher do
     handlers = env.module |> Module.get_attribute(:handlers) |> Enum.reverse()
 
     quote do
-      def call(event) do
-        do_match(unquote(handlers), event)
+      def match_handler(event) do
+        do_match(event, unquote(handlers))
       end
 
       @doc false
-      def __handlers__, do: unquote(handlers)
+      def __handlers__, do: unquote(Macro.escape(handlers))
+
+      def do_match(event, handlers) do
+        Enum.find_value(handlers, fn {pattern, handler} ->
+          if Matcherable.match?(pattern, event), do: handler
+        end)
+      end
     end
+  end
+
+  def __call__(event, handler) do
+    metadata = %{event: event, handler: handler}
+
+    :telemetry.execute(
+      [:marvin, :matcher_dispatch, :start],
+      %{system_time: System.system_time()},
+      metadata
+    )
+
+    # TODO: handle exceptions
+    # TODO: add update id for logging
+    handler.call(event)
   end
 
   defmacro handle(pattern, handler) do
     quote do
       @handlers {unquote(Macro.escape(pattern)), unquote(Macro.escape(handler))}
     end
-  end
-
-  def do_match(handlers, event) do
-    Enum.find_value(handlers, fn {pattern, handler} ->
-      if Matcherable.match?(pattern, event), do: handler
-    end)
   end
 end

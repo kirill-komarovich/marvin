@@ -5,7 +5,7 @@ defmodule Marvin.MixProject do
     [
       app: :marvin,
       version: "0.1.0",
-      elixir: "~> 1.10",
+      elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -15,7 +15,11 @@ defmodule Marvin.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      mod: {Marvin, []},
+      extra_applications: [:logger],
+      env: [
+        logger: true
+      ]
     ]
   end
 
@@ -28,9 +32,12 @@ defmodule Marvin.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:telemetry, "~> 0.4"},
       {:nadia, "~> 0.7.0", optional: true},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:telemetry_poller, "~> 0.4", only: [:docs, :test]},
+      {:telemetry_metrics, "~> 0.4", only: [:docs, :test]}
     ]
   end
 end
