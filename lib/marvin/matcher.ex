@@ -28,18 +28,18 @@ defmodule Marvin.Matcher do
   end
 
   defprotocol Matcherable do
-    @spec match?(pattern :: term, event :: Marvin.Event.t()) :: boolean()
-    def match?(pattern, event)
+    @spec match?(pattern :: term, event :: Marvin.Event.t(), opts :: keyword()) :: boolean()
+    def match?(pattern, event, opts \\ [])
   end
 
   defimpl Matcherable, for: Regex do
-    def match?(pattern, %Marvin.Event{text: text}) do
+    def match?(pattern, %Marvin.Event{text: text}, opts \\ []) do
       Regex.match?(pattern, text)
     end
   end
 
   defimpl Matcherable, for: BitString do
-    def match?(pattern, %Marvin.Event{text: text}) do
+    def match?(pattern, %Marvin.Event{text: text}, opts \\ []) do
       String.contains?(text, pattern)
     end
   end
@@ -81,8 +81,8 @@ defmodule Marvin.Matcher do
       def __handlers__, do: unquote(Macro.escape(handlers))
 
       def do_match(event, handlers) do
-        Enum.find_value(handlers, fn {pattern, handler} ->
-          if Matcherable.match?(pattern, event), do: handler
+        Enum.find_value(handlers, fn
+          {handler, {pattern, opts}} -> if Matcherable.match?(pattern, event, opts), do: handler
         end)
       end
     end
@@ -102,9 +102,12 @@ defmodule Marvin.Matcher do
     handler.call(event)
   end
 
-  defmacro handle(pattern, handler) do
+  defmacro handle(pattern, handler, opts \\ []) do
     quote do
-      @handlers {unquote(Macro.escape(pattern)), unquote(Macro.escape(handler))}
+      @handlers {
+        unquote(Macro.escape(handler)),
+        {unquote(Macro.escape(pattern)), unquote(Macro.escape(opts))}
+      }
     end
   end
 end
