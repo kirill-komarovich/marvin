@@ -62,8 +62,8 @@ defmodule Marvin.Matcher do
 
         case match_handler(event) do
           # TODO: handle exception with UnknownHandler?
-          nil -> raise NoHandlerError, event: event
-          handler -> Marvin.Matcher.__call__(event, handler)
+          :error -> raise NoHandlerError, event: event
+          {handler, opts} -> Marvin.Matcher.__call__(event, handler, opts)
         end
       end
     end
@@ -81,14 +81,14 @@ defmodule Marvin.Matcher do
       def __handlers__, do: unquote(Macro.escape(handlers))
 
       def do_match(event, handlers) do
-        Enum.find_value(handlers, fn
-          {handler, {pattern, opts}} -> if Matcherable.match?(pattern, event, opts), do: handler
+        Enum.find_value(handlers, :error, fn
+          {handler, {pattern, opts}} -> if Matcherable.match?(pattern, event, opts), do: {handler, opts}
         end)
       end
     end
   end
 
-  def __call__(event, handler) do
+  def __call__(event, handler, opts) do
     metadata = %{event: event, handler: handler}
 
     :telemetry.execute(
@@ -99,7 +99,7 @@ defmodule Marvin.Matcher do
 
     # TODO: handle exceptions
     # TODO: add update id for logging
-    handler.call(event)
+    handler.call(event, opts)
   end
 
   defmacro handle(pattern, handler, opts \\ []) do

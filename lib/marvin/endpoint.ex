@@ -67,10 +67,13 @@ defmodule Marvin.Endpoint do
           metadata
         )
 
-        unquote(matcher).call(event)
+        event = Marvin.Event.register_before_send(event, fn event ->
+          duration = System.monotonic_time() - start_time
+          :telemetry.execute(@event_prefix ++ [:stop], %{duration: duration}, %{event: event})
+          event
+        end)
 
-        duration = System.monotonic_time() - start_time
-        :telemetry.execute(@event_prefix ++ [:stop], %{duration: duration}, %{event: event})
+        unquote(matcher).call(event)
       end
 
       defoverridable call: 1

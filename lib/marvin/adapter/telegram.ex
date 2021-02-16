@@ -1,6 +1,8 @@
 defmodule Marvin.Adapter.Telegram do
   use Marvin.Adapter
 
+  @command_entity_type "bot_command"
+
   @impl true
   def get_updates(opts) do
     offset = Map.get(opts, :offset)
@@ -24,12 +26,17 @@ defmodule Marvin.Adapter.Telegram do
   end
 
   @impl true
-  def event(event) do
+  def event(update) do
+    command? =
+      update.message.entities &&
+        Enum.any?(update.message.entities, fn %{type: type} -> type == @command_entity_type end)
+
     %Marvin.Event{
       __adapter__: __MODULE__,
       platform: :telegram,
-      text: event.message.text,
-      raw_event: event
+      text: update.message.text,
+      command?: command?,
+      raw_event: update
     }
   end
 

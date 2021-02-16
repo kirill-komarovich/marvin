@@ -11,5 +11,5 @@ defmodule Marvin.Handler do
     end
   end
 
-  @callback call(Event.t()) :: any
+  @callback call(Event.t(), keyword()) :: any
 end
