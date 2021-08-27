@@ -27,23 +27,6 @@ defmodule Marvin.Matcher do
     end
   end
 
-  defprotocol Matcherable do
-    @spec match?(pattern :: term, event :: Marvin.Event.t(), opts :: keyword()) :: boolean()
-    def match?(pattern, event, opts \\ [])
-  end
-
-  defimpl Matcherable, for: Regex do
-    def match?(pattern, %Marvin.Event{text: text}, opts \\ []) do
-      Regex.match?(pattern, text)
-    end
-  end
-
-  defimpl Matcherable, for: BitString do
-    def match?(pattern, %Marvin.Event{text: text}, opts \\ []) do
-      String.contains?(text, pattern)
-    end
-  end
-
   defmacro __using__(_opts) do
     quote do
       Module.register_attribute(__MODULE__, :handlers, accumulate: true)
@@ -51,7 +34,7 @@ defmodule Marvin.Matcher do
       import Marvin.Matcher
       @before_compile Marvin.Matcher
 
-      unquote(match_dispatch())
+      # unquote(match_dispatch())
     end
   end
 
@@ -70,21 +53,13 @@ defmodule Marvin.Matcher do
   end
 
   defmacro __before_compile__(env) do
-    handlers = env.module |> Module.get_attribute(:handlers) |> Enum.reverse()
+    handlers = env.module |> Module.get_attribute(:handlers) |> Enum.reverse() |> Macro.escape()
 
     quote do
-      def match_handler(event) do
-        do_match(event, unquote(handlers))
-      end
-
       @doc false
-      def __handlers__, do: unquote(Macro.escape(handlers))
+      def __handlers__, do: unquote(handlers)
 
-      def do_match(event, handlers) do
-        Enum.find_value(handlers, :error, fn
-          {handler, {pattern, opts}} -> if Matcherable.match?(pattern, event, opts), do: {handler, opts}
-        end)
-      end
+      unquote(Marvin.Matcher.Compiler.compile(handlers))
     end
   end
 
@@ -102,12 +77,18 @@ defmodule Marvin.Matcher do
     handler.call(event, opts)
   end
 
+  def sigil_m(string, []) do
+    {:ok, parsed, _, _, _, _} = Marvin.Matcher.Parser.pattern(string)
+    parsed
+  end
+
   defmacro handle(pattern, handler, opts \\ []) do
+    pattern = pattern |> Macro.expand(__CALLER__)
+    handler = handler |> Macro.expand(__CALLER__)
+    opts = opts |> Macro.expand(__CALLER__)
+
     quote do
-      @handlers {
-        unquote(Macro.escape(handler)),
-        {unquote(Macro.escape(pattern)), unquote(Macro.escape(opts))}
-      }
+      @handlers {unquote(pattern), unquote(handler), unquote(opts)}
     end
   end
 end
