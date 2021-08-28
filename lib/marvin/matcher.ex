@@ -57,7 +57,16 @@ defmodule Marvin.Matcher do
 
     quote do
       def match_handler(event) do
-        do_match(event, unquote(handlers))
+        start_time = System.monotonic_time()
+        event_prefix = [:marvin, :matcher]
+        :telemetry.execute(event_prefix ++ [:start], %{system_time: System.system_time()}, %{event: event})
+
+        matched = do_match(event, unquote(handlers))
+
+        duration = System.monotonic_time() - start_time
+        :telemetry.execute(event_prefix ++ [:stop], %{duration: duration}, %{event: event})
+
+        matched
       end
 
       @doc false
