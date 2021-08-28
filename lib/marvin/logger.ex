@@ -40,16 +40,17 @@ defmodule Marvin.Logger do
           text
         ]
       end,
-      [event_id: event.event_id]
+      event_id: event.event_id
     )
   end
 
   defp marvin_endpoint_stop(_, %{duration: duration}, %{event: event}, _) do
     Logger.log(
-      :info, fn ->
+      :info,
+      fn ->
         ["Finished in ", duration(duration)]
       end,
-      [event_id: event.event_id]
+      event_id: event.event_id
     )
   end
 
@@ -61,7 +62,7 @@ defmodule Marvin.Logger do
       fn ->
         ["Processing with ", inspect(handler), ?\n, "  Params: ", inspect(event.params)]
       end,
-      [event_id: event.event_id]
+      event_id: event.event_id
     )
   end
 end

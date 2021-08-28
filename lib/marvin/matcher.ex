@@ -59,7 +59,10 @@ defmodule Marvin.Matcher do
       def match_handler(event) do
         start_time = System.monotonic_time()
         event_prefix = [:marvin, :matcher]
-        :telemetry.execute(event_prefix ++ [:start], %{system_time: System.system_time()}, %{event: event})
+
+        :telemetry.execute(event_prefix ++ [:start], %{system_time: System.system_time()}, %{
+          event: event
+        })
 
         matched = do_match(event, unquote(handlers))
 
