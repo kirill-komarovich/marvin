@@ -36,8 +36,13 @@ defmodule Marvin.Adapter.Telegram do
       platform: :telegram,
       text: update.message.text,
       command?: command?,
+      event_id: event_id(update),
       raw_event: update
     }
+  end
+
+  defp event_id(%Nadia.Model.Update{update_id: update_id}) do
+    update_id
   end
 
   defp run_command(command, args \\ []) do

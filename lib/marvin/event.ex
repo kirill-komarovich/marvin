@@ -7,6 +7,7 @@ defmodule Marvin.Event do
   @type raw_event :: any()
   @type before_send_callback :: (t() -> t())
   @type before_send :: [before_send_callback()]
+  @type event_id :: String.t()
 
   @type t :: %__MODULE__{
           __adapter__: adapter(),
@@ -16,7 +17,8 @@ defmodule Marvin.Event do
           command?: boolean(),
           params: params(),
           assigns: assigns(),
-          before_send: before_send()
+          before_send: before_send(),
+          event_id: event_id()
         }
 
   defstruct [
@@ -24,6 +26,7 @@ defmodule Marvin.Event do
     :platform,
     :raw_event,
     :text,
+    :event_id,
     command?: false,
     params: %{},
     assigns: %{},

@@ -82,7 +82,6 @@ defmodule Marvin.Matcher do
     )
 
     # TODO: handle exceptions
-    # TODO: add update id for logging
     handler.call(event, opts)
   end
 

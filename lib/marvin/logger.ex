@@ -24,33 +24,44 @@ defmodule Marvin.Logger do
   end
 
   defp marvin_endpoint_start(_, _, %{event: event}, _) do
-    Logger.log(:info, fn ->
-      %{text: text, platform: platform} = event
+    Logger.log(
+      :info,
+      fn ->
+        %{text: text, platform: platform} = event
 
-      [
-        "Get",
-        ?\s,
-        Atom.to_string(platform),
-        ?\s,
-        "update",
-        ?\n,
-        "  Text:  ",
-        text
-      ]
-    end)
+        [
+          "Get",
+          ?\s,
+          Atom.to_string(platform),
+          ?\s,
+          "update",
+          ?\n,
+          "  Text:  ",
+          text
+        ]
+      end,
+      [event_id: event.event_id]
+    )
   end
 
-  defp marvin_endpoint_stop(_, %{duration: duration}, _metadata, _) do
-    Logger.log(:info, fn ->
-      ["Finished in ", duration(duration)]
-    end)
+  defp marvin_endpoint_stop(_, %{duration: duration}, %{event: event}, _) do
+    Logger.log(
+      :info, fn ->
+        ["Finished in ", duration(duration)]
+      end,
+      [event_id: event.event_id]
+    )
   end
 
   defp marvin_matcher_dispatch_start(_, _, metadata, _) do
     %{handler: handler, event: event} = metadata
 
-    Logger.log(:info, fn ->
-      ["Processing with ", inspect(handler), ?\n, "  Params: ", inspect(event.params)]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        ["Processing with ", inspect(handler), ?\n, "  Params: ", inspect(event.params)]
+      end,
+      [event_id: event.event_id]
+    )
   end
 end
