@@ -1,7 +1,7 @@
 defmodule Marvin.Event do
   @type adapter :: module()
   @type assigns :: %{optional(atom) => any()}
-  @type params :: %{optional(atom) => any()}
+  @type params :: %{optional(string) => any()}
   @type platform :: atom()
   @type text :: string()
   @type raw_event :: any()
@@ -39,6 +39,18 @@ defmodule Marvin.Event do
   def register_before_send(%__MODULE__{before_send: before_send} = event, callback)
       when is_function(callback, 1) do
     %{event | before_send: [callback | before_send]}
+  end
+
+  @spec update_params(t, params()) :: t
+  def update_params(event, new_params)
+
+  def update_params(%__MODULE__{} = event, new_params) when map_size(new_params) == 0 do
+    event
+  end
+
+  def update_params(%__MODULE__{params: existed} = event, new_params) when is_map(new_params) do
+    params = Map.merge(existed, new_params)
+    %{event | params: params}
   end
 
   defp run_before_send(%__MODULE__{before_send: before_send} = event) do

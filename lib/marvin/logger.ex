@@ -47,10 +47,10 @@ defmodule Marvin.Logger do
   end
 
   defp marvin_matcher_dispatch_start(_, _, metadata, _) do
-    %{handler: handler} = metadata
+    %{handler: handler, event: event} = metadata
 
     Logger.log(:info, fn ->
-      ["Processing with ", inspect(handler)]
+      ["Processing with ", inspect(handler), ?\n, "  Params: ", inspect(event.params)]
     end)
   end
 end

@@ -27,28 +27,13 @@ defmodule Marvin.Matcher do
     end
   end
 
-  defprotocol Matcherable do
-    @spec match?(pattern :: term, event :: Marvin.Event.t(), opts :: keyword()) :: boolean()
-    def match?(pattern, event, opts \\ [])
-  end
-
-  defimpl Matcherable, for: Regex do
-    def match?(pattern, %Marvin.Event{text: text}, opts \\ []) do
-      Regex.match?(pattern, text)
-    end
-  end
-
-  defimpl Matcherable, for: BitString do
-    def match?(pattern, %Marvin.Event{text: text}, opts \\ []) do
-      String.contains?(text, pattern)
-    end
-  end
-
   defmacro __using__(_opts) do
     quote do
       Module.register_attribute(__MODULE__, :handlers, accumulate: true)
 
       import Marvin.Matcher
+      import BubbleMatch.Sigil
+
       @before_compile Marvin.Matcher
 
       unquote(match_dispatch())
@@ -58,12 +43,10 @@ defmodule Marvin.Matcher do
   defp match_dispatch do
     quote location: :keep do
       def call(event) do
-        %{text: text} = event
-
         case match_handler(event) do
+          {event, handler, opts} -> Marvin.Matcher.__call__(event, handler, opts)
           # TODO: handle exception with UnknownHandler?
           :error -> raise NoHandlerError, event: event
-          {handler, opts} -> Marvin.Matcher.__call__(event, handler, opts)
         end
       end
     end
@@ -79,22 +62,14 @@ defmodule Marvin.Matcher do
 
       @doc false
       def __handlers__, do: unquote(Macro.escape(handlers))
-
-      def do_match(event, handlers) do
-        Enum.find_value(handlers, :error, fn
-          {handler, {pattern, opts}} -> if Matcherable.match?(pattern, event, opts), do: {handler, opts}
-        end)
-      end
     end
   end
 
   def __call__(event, handler, opts) do
-    metadata = %{event: event, handler: handler}
-
     :telemetry.execute(
       [:marvin, :matcher_dispatch, :start],
       %{system_time: System.system_time()},
-      metadata
+      %{event: event, handler: handler}
     )
 
     # TODO: handle exceptions
@@ -102,12 +77,30 @@ defmodule Marvin.Matcher do
     handler.call(event, opts)
   end
 
+  def do_match(event, handlers) do
+    Enum.find_value(handlers, :error, fn
+      {handler, {pattern, opts}} ->
+        case Marvin.Matcher.Matcherable.match(pattern, event, opts) do
+          {:match, params} ->
+            {
+              Marvin.Event.update_params(event, params),
+              handler,
+              opts
+            }
+
+          :nomatch ->
+            false
+        end
+    end)
+  end
+
   defmacro handle(pattern, handler, opts \\ []) do
+    pattern = pattern |> Macro.expand(__CALLER__) |> Macro.escape()
+    handler = handler |> Macro.expand(__CALLER__)
+    opts = opts |> Macro.expand(__CALLER__)
+
     quote do
-      @handlers {
-        unquote(Macro.escape(handler)),
-        {unquote(Macro.escape(pattern)), unquote(Macro.escape(opts))}
-      }
+      @handlers {unquote(handler), {unquote(pattern), unquote(opts)}}
     end
   end
 end
