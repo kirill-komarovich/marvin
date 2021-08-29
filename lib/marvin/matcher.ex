@@ -45,7 +45,6 @@ defmodule Marvin.Matcher do
       def call(event) do
         case match_handler(event) do
           {event, handler, opts} -> Marvin.Matcher.__call__(event, handler, opts)
-          # TODO: handle exception with UnknownHandler?
           :error -> raise NoHandlerError, event: event
         end
       end
@@ -56,24 +55,25 @@ defmodule Marvin.Matcher do
     handlers = env.module |> Module.get_attribute(:handlers) |> Enum.reverse()
 
     quote do
-      def match_handler(event) do
-        start_time = System.monotonic_time()
-        event_prefix = [:marvin, :matcher]
+      @event_prefix [:marvin, :matcher]
 
-        :telemetry.execute(event_prefix ++ [:start], %{system_time: System.system_time()}, %{
+      @doc false
+      def __handlers__, do: unquote(handlers)
+
+      defp match_handler(event) do
+        start_time = System.monotonic_time()
+
+        :telemetry.execute(@event_prefix ++ [:start], %{system_time: System.system_time()}, %{
           event: event
         })
 
         matched = do_match(event, unquote(handlers))
 
         duration = System.monotonic_time() - start_time
-        :telemetry.execute(event_prefix ++ [:stop], %{duration: duration}, %{event: event})
+        :telemetry.execute(@event_prefix ++ [:stop], %{duration: duration}, %{event: event})
 
         matched
       end
-
-      @doc false
-      def __handlers__, do: unquote(Macro.escape(handlers))
     end
   end
 
