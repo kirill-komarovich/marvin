@@ -11,16 +11,16 @@ defmodule Marvin.Matcher.MatcherableTest do
     @unmatched ~r/^hello$/
 
     test "match/2 with matching input returns {:match, %{}}" do
-      assert {:match, %{} = params} = Matcherable.match(@matched, @input)
+      assert {:match, %{} = params} = Matcherable.match(@matched, @input, [])
       assert map_size(params) == 0
     end
 
     test "match/2 with matching input and named captures returns {:match, captures}" do
-      assert {:match, %{"name" => "user"}} = Matcherable.match(@matched_with_args, @input)
+      assert {:match, %{"name" => "user"}} = Matcherable.match(@matched_with_args, @input, [])
     end
 
     test "match/2 with non matching input returns :nomatch" do
-      assert :nomatch = Matcherable.match(@unmatched, @input)
+      assert :nomatch = Matcherable.match(@unmatched, @input, [])
     end
   end
 
@@ -30,12 +30,12 @@ defmodule Marvin.Matcher.MatcherableTest do
     @unmatched "unmatched"
 
     test "match/2 with matching input returns {:match, %{}}" do
-      assert {:match, %{} = params} = Matcherable.match(@matched, @input)
+      assert {:match, %{} = params} = Matcherable.match(@matched, @input, [])
       assert map_size(params) == 0
     end
 
     test "match/2 with non matching input returns :nomatch" do
-      assert :nomatch = Matcherable.match(@unmatched, @input)
+      assert :nomatch = Matcherable.match(@unmatched, @input, [])
     end
   end
 
@@ -49,16 +49,16 @@ defmodule Marvin.Matcher.MatcherableTest do
     @unmatched ~m"[person]"
 
     test "match/2 with matching input returns {:match, %{}}" do
-      assert {:match, %{} = params} = Matcherable.match(@matched, @input)
+      assert {:match, %{} = params} = Matcherable.match(@matched, @input, [])
       assert map_size(params) == 0
     end
 
     test "match/2 with matching input and named captures returns {:match, captures}" do
-      assert {:match, %{"name" => ["user"]}} = Matcherable.match(@matched_with_args, @input)
+      assert {:match, %{"name" => ["user"]}} = Matcherable.match(@matched_with_args, @input, [])
     end
 
     test "match/2 with matching input and without params returns {:match, %{}}" do
-      assert {:match, %{} = params} = Matcherable.match(@matched_with_args, @input_without_params)
+      assert {:match, %{} = params} = Matcherable.match(@matched_with_args, @input_without_params, [])
       assert map_size(params) == 0
     end
 
@@ -68,7 +68,7 @@ defmodule Marvin.Matcher.MatcherableTest do
     end
 
     test "match/2 with non matching input returns :nomatch" do
-      assert :nomatch = Matcherable.match(@unmatched, @input)
+      assert :nomatch = Matcherable.match(@unmatched, @input, [])
     end
   end
 end

@@ -17,11 +17,11 @@ defprotocol Marvin.Matcher.Matcherable do
   """
   @spec match(pattern :: term, event :: Marvin.Event.t(), opts :: keyword()) ::
           {:match, map()} | :nomatch
-  def match(pattern, event, opts \\ [])
+  def match(pattern, event, opts)
 end
 
 defimpl Marvin.Matcher.Matcherable, for: Regex do
-  def match(pattern, %Marvin.Event{text: text}, _opts \\ []) do
+  def match(pattern, %Marvin.Event{text: text}, _opts) do
     case Regex.match?(pattern, text) do
       true -> {:match, process_params(pattern, text)}
       false -> :nomatch
@@ -29,15 +29,12 @@ defimpl Marvin.Matcher.Matcherable, for: Regex do
   end
 
   defp process_params(pattern, text) do
-    case Regex.named_captures(pattern, text) do
-      captures when is_map(captures) -> captures
-      nil -> %{}
-    end
+    Regex.named_captures(pattern, text)
   end
 end
 
 defimpl Marvin.Matcher.Matcherable, for: BitString do
-  def match(pattern, %Marvin.Event{text: text}, _opts \\ []) do
+  def match(pattern, %Marvin.Event{text: text}, _opts) do
     case text == pattern do
       true -> {:match, %{}}
       false -> :nomatch
@@ -46,7 +43,7 @@ defimpl Marvin.Matcher.Matcherable, for: BitString do
 end
 
 defimpl Marvin.Matcher.Matcherable, for: BubbleMatch do
-  def match(pattern, %Marvin.Event{text: text}, opts \\ []) do
+  def match(pattern, %Marvin.Event{text: text}, opts) do
     case BubbleMatch.match(pattern, text) do
       {:match, params} -> {:match, process_params(params, opts)}
       :nomatch -> :nomatch
