@@ -44,7 +44,7 @@ defmodule Marvin.Matcher do
     quote location: :keep do
       def call(event) do
         case match_handler(event) do
-          {event, handler, opts} -> Marvin.Matcher.__call__(event, handler, opts)
+          {handler, event} -> Marvin.Matcher.__call__(event, handler)
           :error -> raise NoHandlerError, event: event
         end
       end
@@ -77,7 +77,7 @@ defmodule Marvin.Matcher do
     end
   end
 
-  def __call__(event, handler, opts) do
+  def __call__(event, handler) do
     :telemetry.execute(
       [:marvin, :matcher_dispatch, :start],
       %{system_time: System.system_time()},
@@ -85,7 +85,7 @@ defmodule Marvin.Matcher do
     )
 
     # TODO: handle exceptions
-    handler.call(event, opts)
+    handler.call(event, event.params)
   end
 
   def do_match(event, handlers) do
@@ -93,11 +93,7 @@ defmodule Marvin.Matcher do
       {handler, {pattern, opts}} ->
         case Marvin.Matcher.Matcherable.match(pattern, event, opts) do
           {:match, params} ->
-            {
-              Marvin.Event.update_params(event, params),
-              handler,
-              opts
-            }
+            {handler, Marvin.Event.update_params(event, params)}
 
           :nomatch ->
             false
@@ -108,7 +104,6 @@ defmodule Marvin.Matcher do
   defmacro handle(pattern, handler, opts \\ []) do
     pattern = pattern |> Macro.expand(__CALLER__) |> Macro.escape()
     handler = handler |> Macro.expand(__CALLER__)
-    opts = opts |> Macro.expand(__CALLER__)
 
     quote do
       @handlers {unquote(handler), {unquote(pattern), unquote(opts)}}
