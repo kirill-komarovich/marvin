@@ -1,6 +1,7 @@
 defmodule Marvin.MatcherTest do
   use ExUnit.Case, async: true
 
+  import ExUnit.CaptureLog
   import BubbleMatch.Sigil
   alias Marvin.Event
 
@@ -22,9 +23,14 @@ defmodule Marvin.MatcherTest do
     end
   end
 
-  defmodule CustomHandler do
+  defmodule SendingHandler do
     def call(event, _opts) do
-      {__MODULE__, event}
+      Event.send_message(event, "")
+    end
+  end
+
+  defmodule TestAdapter do
+    def send_message(_update, _text, _opts) do
     end
   end
 
@@ -34,30 +40,35 @@ defmodule Marvin.MatcherTest do
     handle(~r/test_regex/, RegexHandler)
     handle("test_string", StringHandler)
     handle(~m"hello [0-1=name]", BubbleHandler)
+    handle(~m"hi [0-1=name]", SendingHandler)
   end
 
   test "__handlers__/0 returns all registered handlers with patterns" do
     expected = [
       {RegexHandler, {~r/test_regex/, []}},
       {StringHandler, {"test_string", []}},
-      {BubbleHandler, {~m"hello [0-1=name]", []}}
+      {BubbleHandler, {~m"hello [0-1=name]", []}},
+      {SendingHandler, {~m"hi [0-1=name]", []}}
     ]
 
     assert Matcher.__handlers__() == expected
   end
 
+  @tag capture_log: true
   test "call/1 when triggers regex pattern" do
     event = %Event{text: "test_regex"}
 
     assert {RegexHandler, ^event} = Matcher.call(event)
   end
 
+  @tag capture_log: true
   test "call/1 when triggers string pattern" do
     event = %Event{text: "test_string"}
 
     assert {StringHandler, ^event} = Matcher.call(event)
   end
 
+  @tag capture_log: true
   test "call/1 when triggers bubble pattern" do
     name = "user"
     event = %Event{text: "hello #{name}"}
@@ -75,6 +86,17 @@ defmodule Marvin.MatcherTest do
     end
   end
 
+  test "call/1 logs matcher start dispatch" do
+    name = "user"
+    event = %Event{__adapter__: TestAdapter, text: "hi #{name}"}
+
+    fun = fn -> Matcher.call(event) end
+
+    assert capture_log(fun) =~ ~r"\[info\]  Processing with Marvin\.MatcherTest\.SendingHandler"u
+    assert capture_log(fun) =~ ~r"Params: \%\{\"name\" => \[\"#{name}\"\]\}"u
+  end
+
+  @tag capture_log: true
   test "telemetry", %{test: test} do
     self = self()
     event = %Event{text: "test_string"}
