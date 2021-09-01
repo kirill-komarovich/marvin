@@ -9,6 +9,7 @@ defmodule Marvin.Endpoint do
     quote do
       require Logger
       import Marvin.Endpoint
+
       @behaviour Marvin.Endpoint
 
       @before_compile Marvin.Endpoint

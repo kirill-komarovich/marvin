@@ -58,7 +58,9 @@ defmodule Marvin.Matcher.MatcherableTest do
     end
 
     test "match/2 with matching input and without params returns {:match, %{}}" do
-      assert {:match, %{} = params} = Matcherable.match(@matched_with_args, @input_without_params, [])
+      assert {:match, %{} = params} =
+               Matcherable.match(@matched_with_args, @input_without_params, [])
+
       assert map_size(params) == 0
     end
 

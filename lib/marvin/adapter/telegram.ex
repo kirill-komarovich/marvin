@@ -17,7 +17,7 @@ defmodule Marvin.Adapter.Telegram do
 
     options =
       if reply? do
-        options = Keyword.put(options, :reply_to_message_id, raw_event.message.message_id)
+        Keyword.put(options, :reply_to_message_id, raw_event.message.message_id)
       else
         options
       end
@@ -45,9 +45,10 @@ defmodule Marvin.Adapter.Telegram do
     update_id
   end
 
-  defp run_command(command, args \\ []) do
+  defp run_command(command, args) do
     Application.ensure_all_started(:nadia)
 
+    # TODO: convert errors to internal Error struct
     apply(Nadia, command, args)
   end
 end

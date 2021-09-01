@@ -26,9 +26,9 @@ defmodule Marvin.MatcherTest do
   defmodule Matcher do
     use Marvin.Matcher
 
-    handle(~r/test_regex/, RegexHandler)
-    handle("test_string", StringHandler)
-    handle(~m"hello [0-1=name]", BubbleHandler)
+    handle ~r/test_regex/, RegexHandler
+    handle "test_string", StringHandler
+    handle ~m"hello [0-1=name]", BubbleHandler
   end
 
   test "__handlers__/0 returns all registered handlers with patterns" do
@@ -103,9 +103,13 @@ defmodule Marvin.MatcherTest do
 
     Matcher.call(event)
 
-    assert_receive {:telemetry_event, [:marvin, :matcher, :start], %{system_time: _}, %{event: event}}
+    assert_receive {:telemetry_event, [:marvin, :matcher, :start], %{system_time: _},
+                    %{event: event}}
+
     assert_receive {:telemetry_event, [:marvin, :matcher, :stop], %{duration: _}, %{event: event}}
-    assert_receive {:telemetry_event, [:marvin, :matcher_dispatch, :start], %{system_time: _}, %{event: event}}
+
+    assert_receive {:telemetry_event, [:marvin, :matcher_dispatch, :start], %{system_time: _},
+                    %{event: event}}
 
     :telemetry.detach("#{test}")
   end
