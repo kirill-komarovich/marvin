@@ -4,11 +4,11 @@ defmodule Marvin.Matcher do
 
     ##Example
 
-    defmodule Marvin.Matcher do
-      use Marvin.Matcher
+      defmodule Marvin.Matcher do
+        use Marvin.Matcher
 
-      handle ~r/.*/, Marvin.Handlers.HelloHandler
-    end
+        handle ~r/.*/, Marvin.Handlers.HelloHandler
+      end
   """
 
   defmodule NoHandlerError do
@@ -101,6 +101,19 @@ defmodule Marvin.Matcher do
     end)
   end
 
+  @doc """
+  Registers handler with given pattern.
+
+  ## Examples
+
+    defmodule Marvin.Matcher do
+      use Marvin.Matcher
+
+      handle ~r/.*/, Marvin.Handlers.HelloHandler
+      handle "/command", Marvin.Handlers.HelloHandler
+      handle ~m"hello [0-1=name]", Marvin.Handlers.HelloHandler, join: ""
+    end
+  """
   defmacro handle(pattern, handler, opts \\ []) do
     pattern = pattern |> Macro.expand(__CALLER__) |> Macro.escape()
     handler = handler |> Macro.expand(__CALLER__)

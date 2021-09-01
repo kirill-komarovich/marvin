@@ -3,8 +3,6 @@ defmodule Marvin.Poller do
 
   """
 
-  alias Marvin.Event
-
   @doc false
   defmacro __using__(opts) do
     quote do
@@ -15,6 +13,7 @@ defmodule Marvin.Poller do
     end
   end
 
+  @doc false
   def config(opts) do
     quote do
       require Logger
@@ -26,13 +25,19 @@ defmodule Marvin.Poller do
       @adapter opts[:adapter] || raise("poller expects :adapter to be given")
       @timeout opts[:timeout] || 1000
 
+      @doc false
       def start_link(endpoint, opts \\ []) do
         GenServer.start_link(__MODULE__, {endpoint, opts}, name: @adapter)
       end
 
+      @doc false
       @impl true
       def init({endpoint, _opts}) do
-        Logger.info("Start poll with #{apply(@adapter, :name, [])}")
+        :telemetry.execute(
+          [:marvin, :poller, :start],
+          %{system_time: System.system_time()},
+          %{adapter: @adapter}
+        )
 
         :timer.send_interval(@timeout, :poll)
 
@@ -43,6 +48,7 @@ defmodule Marvin.Poller do
     end
   end
 
+  @doc false
   def poller() do
     quote location: :keep, unquote: false do
       @doc false
@@ -51,42 +57,58 @@ defmodule Marvin.Poller do
       end
 
       @impl true
-      def handle_info(:poll, %{endpoint: endpoint} = state) do
-        case apply(@adapter, :get_updates, [state]) do
-          {:ok, updates} ->
-            process_updates(endpoint, @adapter, updates)
-            new_state = update_state(state, updates)
-
-            {:noreply, new_state}
-
-          {:error, error} ->
-            process_error(error)
-
-            {:noreply, state}
-        end
+      def handle_info(:poll, state) do
+        Marvin.Poller.poll(@adapter, state, &update_state/2)
       end
 
+      @doc ~S"""
+      Poller state update function, used in end pollers
+      """
+      @spec update_state(map(), [term()]) :: map()
       def update_state(state, _updates), do: state
 
       defoverridable update_state: 2
     end
   end
 
-  def process_updates(endpoint, adapter, updates \\ []) do
-    Enum.each(updates, fn update -> Event.Processor.process(endpoint, adapter, update) end)
+  @doc """
+
+  """
+  @spec poll(atom(), map(), (map(), [term()] -> map())) :: {:noreply, map()}
+  def poll(adapter, %{endpoint: endpoint} = state, state_updater) do
+    case apply(adapter, :get_updates, [state]) do
+      {:ok, updates} ->
+        process_updates(endpoint, adapter, updates)
+        new_state = state_updater.(state, updates)
+
+        {:noreply, new_state}
+
+      {:error, error} ->
+        process_error(adapter, error)
+
+        {:noreply, state}
+    end
   end
 
-  def process_error(error) do
-    IO.inspect(error)
+  defp process_updates(endpoint, adapter, updates) do
+    Marvin.Event.Processor.process(endpoint, adapter, updates)
   end
 
+  defp process_error(adapter, error) do
+    :telemetry.execute(
+      [:marvin, :poller, :poll, :error],
+      %{system_time: System.system_time()},
+      %{adapter: adapter, error: error}
+    )
+  end
+
+  @doc false
   def __child_spec__(handler, opts) do
     endpoint = Keyword.fetch!(opts, :endpoint)
-    args = [endpoint]
 
     %{
       id: handler,
-      start: {handler, :start_link, args}
+      start: {handler, :start_link, [endpoint]}
     }
   end
 end

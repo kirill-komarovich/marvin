@@ -3,6 +3,8 @@ defmodule Marvin.Logger do
 
   def install do
     handlers = %{
+      [:marvin, :poller, :start] => &marvin_poller_start/4,
+      [:marvin, :poller, :poll, :error] => &marvin_poller_poll_error/4,
       [:marvin, :endpoint, :start] => &marvin_endpoint_start/4,
       [:marvin, :endpoint, :stop] => &marvin_endpoint_stop/4,
       [:marvin, :matcher_dispatch, :start] => &marvin_matcher_dispatch_start/4
@@ -21,6 +23,18 @@ defmodule Marvin.Logger do
     else
       [Integer.to_string(duration), "µs"]
     end
+  end
+
+  defp marvin_poller_start(_, _, %{adapter: adapter}, _) do
+    Logger.log(:info, fn -> ["Start poll with", ?\s, apply(adapter, :name, [])] end, [])
+  end
+
+  defp marvin_poller_poll_error(_, _, %{adapter: adapter, error: error}, _) do
+    Logger.log(
+      :error,
+      fn -> ["Error while polling", ?\s, apply(adapter, :name, []), ?:, ?\s, inspect(error)] end,
+      []
+    )
   end
 
   defp marvin_endpoint_start(_, _, %{event: event}, _) do
@@ -48,7 +62,7 @@ defmodule Marvin.Logger do
     Logger.log(
       :info,
       fn ->
-        ["Finished in ", duration(duration)]
+        ["Finished in ", duration(duration), ?\n]
       end,
       event_id: event.event_id
     )

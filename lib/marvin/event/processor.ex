@@ -6,6 +6,10 @@ defmodule Marvin.Event.Processor do
 
   def init(update), do: {:ok, update}
 
+  def process(endpoint, adapter, updates) when is_list(updates) do
+    Enum.each(updates, fn update -> process(endpoint, adapter, update) end)
+  end
+
   def process(endpoint, adapter, update) do
     {:ok, pid} = Supervisor.start_child(update)
 
