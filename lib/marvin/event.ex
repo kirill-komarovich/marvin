@@ -1,4 +1,8 @@
 defmodule Marvin.Event do
+  @moduledoc ~S"""
+  This module defines a struct and the main functions for working with events.
+  """
+
   @type adapter :: module()
   @type assigns :: %{optional(atom()) => any()}
   @type params :: %{optional(String.t()) => any()}
@@ -33,7 +37,7 @@ defmodule Marvin.Event do
     before_send: []
   ]
 
-  @doc """
+  @doc ~S"""
   Sends text message with current adapter
 
   ## Example:
@@ -42,13 +46,13 @@ defmodule Marvin.Event do
 
   """
   @spec send_message(t, String.t(), keyword) :: term
-  def send_message(event = %__MODULE__{__adapter__: adapter} = event, text, opts \\ []) do
+  def send_message(%__MODULE__{__adapter__: adapter} = event, text, opts \\ []) do
     event = run_before_send(event)
 
     apply(adapter, :send_message, [event, text, opts])
   end
 
-  @doc """
+  @doc ~S"""
   Adds callback function that accepts and returns event
 
   ## Example:
@@ -65,7 +69,7 @@ defmodule Marvin.Event do
     %{event | before_send: [callback | before_send]}
   end
 
-  @doc """
+  @doc ~S"""
   Updates params attribute of current event
 
   ## Example:

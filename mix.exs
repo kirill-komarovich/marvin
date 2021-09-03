@@ -9,6 +9,11 @@ defmodule Marvin.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() != :test,
+      xref: [
+        exclude: [
+          {IEx, :started?, 0}
+        ]
+      ],
       deps: deps()
     ]
   end
@@ -37,7 +42,7 @@ defmodule Marvin.MixProject do
       {:bubble_match, "~> 0.4.0"},
       {:nadia, "~> 0.7.0", optional: true},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:telemetry_poller, "~> 0.4", only: [:docs, :test]},
       {:telemetry_metrics, "~> 0.4", only: [:docs, :test]}
     ]

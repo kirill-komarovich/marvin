@@ -6,7 +6,7 @@ defmodule Marvin.EndpointTest do
 
   defmodule TestMatcher do
     def call(event) do
-      Enum.reduce(event.before_send, event, & &1.(&2))
+      event = Enum.reduce(event.before_send, event, & &1.(&2))
 
       {:ok, event.text}
     end
