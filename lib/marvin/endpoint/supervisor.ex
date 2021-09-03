@@ -23,7 +23,7 @@ defmodule Marvin.Endpoint.Supervisor do
   end
 
   defp event_children do
-    [Event.Supervisor.child_spec()]
+    [Event.Supervisor.child_spec([])]
   end
 
   defp pollers_children(endpoint, polling?) do

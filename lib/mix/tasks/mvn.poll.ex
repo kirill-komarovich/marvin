@@ -5,6 +5,7 @@ defmodule Mix.Tasks.Mvn.Poll do
   use Mix.Task
   alias Mix.Tasks.Run
 
+  @impl true
   def run(args) do
     Application.put_env(:marvin, :serve_endpoints, true, persistent: true)
     Run.run(run_args() ++ args)

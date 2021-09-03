@@ -9,7 +9,7 @@ defmodule Marvin.Event.Supervisor do
     DynamicSupervisor.start_child(__MODULE__, {Processor, update})
   end
 
-  def child_spec() do
+  def child_spec(_) do
     %{
       id: __MODULE__,
       start: {__MODULE__, :start_link, []},

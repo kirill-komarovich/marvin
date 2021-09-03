@@ -1,5 +1,6 @@
 defmodule Marvin.Event.Processor do
   use GenServer, restart: :temporary
+
   alias Marvin.Event.Supervisor
 
   def start_link(update), do: GenServer.start_link(__MODULE__, update, [])
