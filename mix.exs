@@ -40,7 +40,7 @@ defmodule Marvin.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       {:telemetry, "~> 0.4"},
       {:bubble_match, "~> 0.4.0"},
-      {:nadia, "~> 0.7.0", optional: true},
+      {:nadia, "~> 0.7.0"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:telemetry_poller, "~> 0.4", only: [:docs, :test]},

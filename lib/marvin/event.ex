@@ -22,7 +22,8 @@ defmodule Marvin.Event do
           params: params(),
           assigns: assigns(),
           before_send: before_send(),
-          event_id: event_id()
+          event_id: event_id(),
+          edited?: boolean()
         }
 
   defstruct [
@@ -31,6 +32,7 @@ defmodule Marvin.Event do
     :raw_event,
     :text,
     :event_id,
+    :edited?,
     command?: false,
     params: %{},
     assigns: %{},
