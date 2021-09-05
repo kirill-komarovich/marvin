@@ -50,7 +50,7 @@ defmodule Marvin.Poller do
 
   @doc false
   def poller() do
-    quote location: :keep, unquote: false do
+    quote do
       @doc false
       def child_spec(opts) do
         Marvin.Poller.__child_spec__(__MODULE__, opts)
