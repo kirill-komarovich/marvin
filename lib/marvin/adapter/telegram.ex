@@ -44,13 +44,19 @@ defmodule Marvin.Adapter.Telegram do
     }
   end
 
-  defp extract_message(%Nadia.Model.Update{message: message, edited_message: nil}), do: {message, false}
-  defp extract_message(%Nadia.Model.Update{message: nil, edited_message: message}), do: {message, true}
+  defp extract_message(%Nadia.Model.Update{message: message, edited_message: nil}),
+    do: {message, false}
+
+  defp extract_message(%Nadia.Model.Update{message: nil, edited_message: message}),
+    do: {message, true}
 
   defp command?(%{entities: nil}), do: false
+
   defp command?(%{entities: entities}) when is_list(entities) do
     Enum.any?(entities, fn %{type: type} -> type == @command_entity_type end)
   end
+
+  defp command?(%{}), do: false
 
   defp event_text(%Nadia.Model.Message{text: text, sticker: sticker}), do: text || sticker.emoji
   defp event_text(%{text: text}), do: text

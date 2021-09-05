@@ -37,6 +37,7 @@ defmodule Marvin.Adapter.TelegramTest do
 
   test "send_message/3 sends message by chat_id" do
     chat_id = :chat_id
+
     update = %Nadia.Model.Update{
       message: %Nadia.Model.Message{
         chat: %Nadia.Model.Chat{
@@ -44,6 +45,7 @@ defmodule Marvin.Adapter.TelegramTest do
         }
       }
     }
+
     text = "message"
 
     Telegram.send_message(%Marvin.Event{raw_event: update}, text, [])
@@ -54,6 +56,7 @@ defmodule Marvin.Adapter.TelegramTest do
   test "send_message/3 with reply option sends message by chat_id" do
     chat_id = :chat_id
     message_id = :message_id
+
     update = %Nadia.Model.Update{
       message: %Nadia.Model.Message{
         message_id: message_id,
@@ -62,6 +65,7 @@ defmodule Marvin.Adapter.TelegramTest do
         }
       }
     }
+
     text = "message"
 
     Telegram.send_message(%Marvin.Event{raw_event: update}, text, reply: true)
@@ -79,14 +83,14 @@ defmodule Marvin.Adapter.TelegramTest do
     }
 
     assert %Marvin.Event{
-        __adapter__: Telegram,
-        platform: :telegram,
-        text: "text",
-        edited?: false,
-        command?: false,
-        event_id: :update_id,
-        raw_event: ^update
-      } = Telegram.event(update)
+             __adapter__: Telegram,
+             platform: :telegram,
+             text: "text",
+             edited?: false,
+             command?: false,
+             event_id: :update_id,
+             raw_event: ^update
+           } = Telegram.event(update)
   end
 
   test "event/1 with sticker converts Nadia.Update to Marvin.Event" do
@@ -100,14 +104,14 @@ defmodule Marvin.Adapter.TelegramTest do
     }
 
     assert %Marvin.Event{
-        __adapter__: Telegram,
-        platform: :telegram,
-        text: "👍",
-        edited?: false,
-        command?: false,
-        event_id: :update_id,
-        raw_event: ^update
-      } = Telegram.event(update)
+             __adapter__: Telegram,
+             platform: :telegram,
+             text: "👍",
+             edited?: false,
+             command?: false,
+             event_id: :update_id,
+             raw_event: ^update
+           } = Telegram.event(update)
   end
 
   test "event/1 with edited message converts Nadia.Update to Marvin.Event" do
@@ -120,14 +124,14 @@ defmodule Marvin.Adapter.TelegramTest do
     }
 
     assert %Marvin.Event{
-        __adapter__: Telegram,
-        platform: :telegram,
-        text: "text",
-        edited?: true,
-        command?: false,
-        event_id: :update_id,
-        raw_event: ^update
-      } = Telegram.event(update)
+             __adapter__: Telegram,
+             platform: :telegram,
+             text: "text",
+             edited?: true,
+             command?: false,
+             event_id: :update_id,
+             raw_event: ^update
+           } = Telegram.event(update)
   end
 
   test "event/1 with command converts Nadia.Update to Marvin.Event" do
@@ -140,13 +144,13 @@ defmodule Marvin.Adapter.TelegramTest do
     }
 
     assert %Marvin.Event{
-        __adapter__: Telegram,
-        platform: :telegram,
-        text: "text",
-        edited?: false,
-        command?: true,
-        event_id: :update_id,
-        raw_event: ^update
-      } = Telegram.event(update)
+             __adapter__: Telegram,
+             platform: :telegram,
+             text: "text",
+             edited?: false,
+             command?: true,
+             event_id: :update_id,
+             raw_event: ^update
+           } = Telegram.event(update)
   end
 end
