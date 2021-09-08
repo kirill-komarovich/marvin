@@ -1,6 +1,8 @@
 defmodule Marvin.EndpointTest do
   use ExUnit.Case, async: true
 
+  doctest Marvin.Endpoint
+
   import ExUnit.CaptureLog
   alias Marvin.Event
 
@@ -13,9 +15,7 @@ defmodule Marvin.EndpointTest do
   end
 
   defmodule Endpoint do
-    use Marvin.Endpoint, otp_app: :marvin
-
-    assert @otp_app == :marvin
+    use Marvin.Endpoint
 
     poller TestPoller
     poller TestPollerWithOpts, some: "opt"

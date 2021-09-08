@@ -1,6 +1,8 @@
 defmodule Marvin.EventTest do
   use ExUnit.Case, async: true
 
+  doctest Marvin.Event
+
   alias Marvin.Event
 
   defmodule TestAdapter do
