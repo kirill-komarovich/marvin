@@ -10,14 +10,14 @@ defmodule Marvin.EventTest do
   end
 
   test "send_message/2 calls send_message adapter function with given text" do
-    event = %Event{__adapter__: TestAdapter}
+    event = %Event{adapter: TestAdapter}
     text = "some reply"
 
     assert [event, text, []] = Event.send_message(event, text)
   end
 
   test "send_message/3 calls send_message adapter function with given text and opts" do
-    event = %Event{__adapter__: TestAdapter}
+    event = %Event{adapter: TestAdapter}
     text = "some reply"
     opts = [reply: true]
 
@@ -43,5 +43,11 @@ defmodule Marvin.EventTest do
     %Event{params: params} = Event.update_params(event, %{"param" => "some param"})
 
     assert params == %{"param" => "some param", "name" => "some name"}
+  end
+
+  test "put_private/3 updates private attributes" do
+    event = %Event{private: %{key: "value"}}
+
+    assert %Event{private: %{key: "new value"}} = Event.put_private(event, :key, "new value")
   end
 end

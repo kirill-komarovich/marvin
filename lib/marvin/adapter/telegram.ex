@@ -16,17 +16,17 @@ defmodule Marvin.Adapter.Telegram do
   end
 
   @impl true
-  def send_message(%Marvin.Event{raw_event: raw_event}, text, opts) do
+  def send_message(%Marvin.Event{private: private}, text, opts) do
     options = []
 
     options =
       if Keyword.get(opts, :reply) do
-        Keyword.put(options, :reply_to_message_id, raw_event.message.message_id)
+        Keyword.put(options, :reply_to_message_id, private[:message_id])
       else
         options
       end
 
-    run_command(:send_message, [raw_event.message.chat.id, text, options])
+    run_command(:send_message, [private[:chat_id], text, options])
   end
 
   @impl true
@@ -34,14 +34,16 @@ defmodule Marvin.Adapter.Telegram do
     {message, edited?} = extract_message(update)
 
     %Marvin.Event{
-      __adapter__: __MODULE__,
+      adapter: __MODULE__,
       platform: @platform,
       text: event_text(message),
-      edited?: edited?,
-      command?: command?(message),
-      event_id: event_id(update),
       raw_event: update
     }
+    |> Marvin.Event.put_private(:edited?, edited?)
+    |> Marvin.Event.put_private(:command?, command?(message))
+    |> Marvin.Event.put_private(:event_id, event_id(update))
+    |> Marvin.Event.put_private(:message_id, message_id(message))
+    |> Marvin.Event.put_private(:chat_id, chat_id(message))
   end
 
   defp extract_message(%Nadia.Model.Update{message: message, edited_message: nil}),
@@ -62,6 +64,10 @@ defmodule Marvin.Adapter.Telegram do
   defp event_text(%{text: text}), do: text
 
   defp event_id(%Nadia.Model.Update{update_id: update_id}), do: update_id
+
+  defp message_id(%{message_id: message_id}), do: message_id
+
+  defp chat_id(%{chat: %{id: chat_id}}), do: chat_id
 
   defp run_command(command, args) do
     Application.ensure_all_started(:nadia)

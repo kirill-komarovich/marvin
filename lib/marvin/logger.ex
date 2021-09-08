@@ -54,7 +54,7 @@ defmodule Marvin.Logger do
           text
         ]
       end,
-      event_id: event.event_id
+      event_id: event.private[:event_id]
     )
   end
 
@@ -64,7 +64,7 @@ defmodule Marvin.Logger do
       fn ->
         ["Finished in ", duration(duration), ?\n]
       end,
-      event_id: event.event_id
+      event_id: event.private[:event_id]
     )
   end
 
@@ -76,7 +76,7 @@ defmodule Marvin.Logger do
       fn ->
         ["Processing with ", inspect(handler), ?\n, "  Params: ", inspect(event.params)]
       end,
-      event_id: event.event_id
+      event_id: event.private[:event_id]
     )
   end
 end

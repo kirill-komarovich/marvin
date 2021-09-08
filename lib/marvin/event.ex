@@ -11,35 +11,28 @@ defmodule Marvin.Event do
   @type raw_event :: any()
   @type before_send_callback :: (t() -> t())
   @type before_send :: [before_send_callback()]
-  @type event_id :: String.t()
 
   @type t :: %__MODULE__{
-          __adapter__: adapter(),
+          adapter: adapter(),
           platform: platform(),
           raw_event: raw_event(),
           text: text(),
-          command?: boolean(),
           params: params(),
           assigns: assigns(),
-          before_send: before_send(),
-          event_id: event_id(),
-          edited?: boolean()
+          private: assigns(),
+          before_send: before_send()
         }
 
-  defstruct [
-    :__adapter__,
-    :platform,
-    :raw_event,
-    :text,
-    :event_id,
-    :edited?,
-    command?: false,
-    params: %{},
-    assigns: %{},
-    before_send: []
-  ]
+  defstruct adapter: Marvin.MissingAdapter,
+            platform: nil,
+            raw_event: nil,
+            text: "",
+            params: %{},
+            assigns: %{},
+            private: %{},
+            before_send: []
 
-  @doc ~S"""
+  @doc """
   Sends text message with current adapter
 
   ## Example:
@@ -48,13 +41,17 @@ defmodule Marvin.Event do
 
   """
   @spec send_message(t, String.t(), keyword) :: term
-  def send_message(%__MODULE__{__adapter__: adapter} = event, text, opts \\ []) do
+  def send_message(%__MODULE__{adapter: adapter} = event, text, opts \\ []) do
     event = run_before_send(event)
 
     apply(adapter, :send_message, [event, text, opts])
   end
 
-  @doc ~S"""
+  defp run_before_send(%__MODULE__{before_send: before_send} = event) do
+    Enum.reduce(before_send, event, & &1.(&2))
+  end
+
+  @doc """
   Adds callback function that accepts and returns event
 
   ## Example:
@@ -71,7 +68,7 @@ defmodule Marvin.Event do
     %{event | before_send: [callback | before_send]}
   end
 
-  @doc ~S"""
+  @doc """
   Updates params attribute of current event
 
   ## Example:
@@ -86,12 +83,20 @@ defmodule Marvin.Event do
     event
   end
 
-  def update_params(%__MODULE__{params: existed} = event, new_params) when is_map(new_params) do
-    params = Map.merge(existed, new_params)
-    %{event | params: params}
+  def update_params(%__MODULE__{params: params} = event, new_params) when is_map(new_params) do
+    %{event | params: Map.merge(params, new_params)}
   end
 
-  defp run_before_send(%__MODULE__{before_send: before_send} = event) do
-    Enum.reduce(before_send, event, & &1.(&2))
+  @doc """
+  Assigns a new **private** key and value in the event.
+
+  ## Example:
+
+    #{__MODULE__}.put_private(event, :private_key, :value)
+
+  """
+  @spec put_private(t(), atom(), term()) :: t()
+  def put_private(%__MODULE__{private: private} = event, key, value) when is_atom(key) do
+    %{event | private: Map.put(private, key, value)}
   end
 end
