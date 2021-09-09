@@ -100,6 +100,8 @@ defmodule Marvin.Poller do
       %{system_time: System.system_time()},
       %{adapter: adapter, error: error}
     )
+
+    # TODO: raise exception?
   end
 
   @doc false

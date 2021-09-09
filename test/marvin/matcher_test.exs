@@ -104,12 +104,13 @@ defmodule Marvin.MatcherTest do
     Matcher.call(event)
 
     assert_receive {:telemetry_event, [:marvin, :matcher, :start], %{system_time: _},
-                    %{event: event}}
+                    %{event: ^event}}
 
-    assert_receive {:telemetry_event, [:marvin, :matcher, :stop], %{duration: _}, %{event: event}}
+    assert_receive {:telemetry_event, [:marvin, :matcher, :stop], %{duration: _},
+                    %{event: ^event}}
 
     assert_receive {:telemetry_event, [:marvin, :matcher_dispatch, :start], %{system_time: _},
-                    %{event: event}}
+                    %{event: ^event}}
 
     :telemetry.detach("#{test}")
   end

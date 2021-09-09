@@ -13,7 +13,7 @@ defmodule Marvin.EventTest do
     event = %Event{adapter: TestAdapter}
     text = "some reply"
 
-    assert [event, text, []] = Event.send_message(event, text)
+    assert [^event, ^text, []] = Event.send_message(event, text)
   end
 
   test "send_message/3 calls send_message adapter function with given text and opts" do
@@ -21,7 +21,7 @@ defmodule Marvin.EventTest do
     text = "some reply"
     opts = [reply: true]
 
-    assert [event, text, opts] = Event.send_message(event, text, opts)
+    assert [^event, ^text, ^opts] = Event.send_message(event, text, opts)
   end
 
   test "register_before_send/2 returns event with added before send callback" do
@@ -29,7 +29,7 @@ defmodule Marvin.EventTest do
     callback = fn _ -> nil end
 
     assert %Event{before_send: []} = event
-    assert %Event{before_send: [callback]} = Event.register_before_send(event, callback)
+    assert %Event{before_send: [^callback]} = Event.register_before_send(event, callback)
   end
 
   test "update_params/2 returns event when new params empty" do

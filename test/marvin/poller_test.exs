@@ -106,7 +106,7 @@ defmodule Marvin.PollerTest do
                     %{adapter: Adapter}}
 
     assert_receive {:telemetry_event, [:marvin, :poller, :poll, :error], %{system_time: _},
-                    %{adapter: adapter, error: error}}
+                    %{adapter: Adapter, error: ^error}}
 
     :telemetry.detach("#{test}")
   end
