@@ -22,7 +22,7 @@ defmodule Marvin.MixProject do
   def application do
     [
       mod: {Marvin, []},
-      extra_applications: [:logger],
+      extra_applications: [:logger, :eex],
       env: [
         logger: true
       ]

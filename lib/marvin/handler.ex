@@ -7,8 +7,6 @@ defmodule Marvin.Handler do
 
   defmacro __using__(_opts) do
     quote do
-      import Marvin.Event
-
       @behaviour unquote(__MODULE__)
     end
   end
