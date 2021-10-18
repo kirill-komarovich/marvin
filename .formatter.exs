@@ -4,7 +4,9 @@ locals_without_parens = [
   poller: 1,
   matcher: 1,
   handle: 2,
-  handle: 3
+  handle: 3,
+  plug: 1,
+  plug: 2
 ]
 
 [
