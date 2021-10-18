@@ -7,6 +7,10 @@ defmodule Marvin.Pipeline.LoggerTest do
 
   @platform :some_platform
 
+  test "init/1 returns opts" do
+    assert [] = Pipeline.Logger.init([])
+  end
+
   test "call/2 logs endpoint start and stop" do
     event = %Event{platform: @platform, text: "hello"}
 

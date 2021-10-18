@@ -42,11 +42,35 @@ defmodule Marvin.Event do
     #{__MODULE__}.send_message(event, "Hello!", reply: true)
 
   """
-  @spec send_message(t, String.t(), keyword) :: term
+  @spec send_message(t(), String.t(), keyword) :: t()
   def send_message(%__MODULE__{adapter: adapter} = event, text, opts \\ []) do
     event = run_before_send(event)
 
     apply(adapter, :send_message, [event, text, opts])
+
+    event
+  end
+
+  @doc """
+  Sends list of text messages with current adapter
+
+  ## Example:
+
+    #{__MODULE__}.send_messages(event, [{"Hello!", reply: true}, "how are you?")
+
+  """
+  @spec send_messages(t(), [{String.t(), keyword} | String.t()]) :: t()
+  def send_messages(%__MODULE__{adapter: adapter} = event, messages) do
+    event = run_before_send(event)
+
+    Enum.each(messages, fn
+      {text, opts} ->
+        apply(adapter, :send_message, [event, text, opts])
+      text when is_binary(text) ->
+        apply(adapter, :send_message, [event, text, []])
+    end)
+
+    event
   end
 
   defp run_before_send(%__MODULE__{before_send: before_send} = event) do
