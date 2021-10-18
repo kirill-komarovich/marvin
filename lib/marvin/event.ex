@@ -20,7 +20,8 @@ defmodule Marvin.Event do
           params: params(),
           assigns: assigns(),
           private: assigns(),
-          before_send: before_send()
+          before_send: before_send(),
+          halted: false
         }
 
   defstruct adapter: Marvin.MissingAdapter,
@@ -30,7 +31,8 @@ defmodule Marvin.Event do
             params: %{},
             assigns: %{},
             private: %{},
-            before_send: []
+            before_send: [],
+            halted: false
 
   @doc """
   Sends text message with current adapter
@@ -88,6 +90,19 @@ defmodule Marvin.Event do
   end
 
   @doc """
+  Assigns a new **assigns** key and value in the event.
+
+  ## Example:
+
+    #{__MODULE__}.put_assigns(event, :assigns_key, :value)
+
+  """
+  @spec put_assigns(t(), atom(), term()) :: t()
+  def put_assigns(%__MODULE__{assigns: assigns} = event, key, value) when is_atom(key) do
+    %{event | assigns: Map.put(assigns, key, value)}
+  end
+
+  @doc """
   Assigns a new **private** key and value in the event.
 
   ## Example:
@@ -98,5 +113,21 @@ defmodule Marvin.Event do
   @spec put_private(t(), atom(), term()) :: t()
   def put_private(%__MODULE__{private: private} = event, key, value) when is_atom(key) do
     %{event | private: Map.put(private, key, value)}
+  end
+
+  @doc """
+  Marks event as halted
+  ## Example:
+
+    #{__MODULE__}.halt(event)
+
+  """
+  @spec halt(t()) :: t()
+  def halt(event)
+
+  def halt(%__MODULE__{halted: true} = event), do: event
+
+  def halt(%__MODULE__{} = event) do
+    %{event | halted: true}
   end
 end
