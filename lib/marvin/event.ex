@@ -66,6 +66,7 @@ defmodule Marvin.Event do
     Enum.each(messages, fn
       {text, opts} ->
         apply(adapter, :send_message, [event, text, opts])
+
       text when is_binary(text) ->
         apply(adapter, :send_message, [event, text, []])
     end)

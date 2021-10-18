@@ -31,16 +31,19 @@ defmodule Marvin.EventTest do
 
   test "send_messages/2 calls send_message adapter function for each given message" do
     event = %Event{adapter: TestAdapter}
+
     messages = [
       {"message 1", [reply: true]},
       {"message 2", []},
       "message 3"
     ]
+
     Event.send_messages(event, messages)
 
     Enum.each(messages, fn
       {text, opts} ->
         assert_receive [^event, ^text, ^opts]
+
       text when is_binary(text) ->
         assert_receive [^event, ^text, []]
     end)
