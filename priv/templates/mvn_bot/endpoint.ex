@@ -3,5 +3,7 @@ defmodule <%= @bot_namespace %>.Endpoint do
 <%= if @telegram do %>
   poller Marvin.Poller.Telegram
 <% end %>
-  matcher <%= @bot_namespace %>.Matcher
+  plug Marvin.Pipeline.Logger
+
+  plug <%= @bot_namespace %>.Matcher
 end

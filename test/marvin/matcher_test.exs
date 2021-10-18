@@ -42,41 +42,41 @@ defmodule Marvin.MatcherTest do
   end
 
   @tag capture_log: true
-  test "call/1 when triggers regex pattern" do
+  test "call/2 when triggers regex pattern" do
     event = %Event{text: "test_regex"}
 
-    assert {RegexHandler, ^event} = Matcher.call(event)
+    assert {RegexHandler, ^event} = Matcher.call(event, [])
   end
 
   @tag capture_log: true
-  test "call/1 when triggers string pattern" do
+  test "call/2 when triggers string pattern" do
     event = %Event{text: "test_string"}
 
-    assert {StringHandler, ^event} = Matcher.call(event)
+    assert {StringHandler, ^event} = Matcher.call(event, [])
   end
 
   @tag capture_log: true
-  test "call/1 when triggers bubble pattern" do
+  test "call/2 when triggers bubble pattern" do
     name = "user"
     event = %Event{text: "hello #{name}"}
     updated_event = %{event | params: %{"name" => [name]}}
 
-    assert {BubbleHandler, ^updated_event} = Matcher.call(event)
+    assert {BubbleHandler, ^updated_event} = Matcher.call(event, [])
   end
 
-  test "call/1 when no handler found" do
+  test "call/2 when no handler found" do
     event = %Event{text: "unknown", platform: :unknown}
     message = "no handler found for #{event.platform} message: #{event.text}"
 
     assert_raise Marvin.Matcher.NoHandlerError, message, fn ->
-      Matcher.call(event)
+      Matcher.call(event, [])
     end
   end
 
-  test "call/1 logs matcher start dispatch" do
+  test "call/2 logs matcher start dispatch" do
     name = "user"
     event = %Event{text: "hello #{name}"}
-    fun = fn -> Matcher.call(event) end
+    fun = fn -> Matcher.call(event, []) end
 
     assert capture_log(fun) =~ ~r"\[info\]  Processing with Marvin\.MatcherTest\.BubbleHandler"u
     assert capture_log(fun) =~ ~r"Params: \%\{\"name\" => \[\"#{name}\"\]\}"u
@@ -101,7 +101,7 @@ defmodule Marvin.MatcherTest do
         nil
       )
 
-    Matcher.call(event)
+    Matcher.call(event, [])
 
     assert_receive {:telemetry_event, [:marvin, :matcher, :start], %{system_time: _},
                     %{event: ^event}}

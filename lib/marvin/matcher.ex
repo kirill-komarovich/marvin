@@ -31,6 +31,8 @@ defmodule Marvin.Matcher do
     quote do
       Module.register_attribute(__MODULE__, :handlers, accumulate: true)
 
+      use Marvin.Pipeline.Builder
+
       import Marvin.Matcher
       import BubbleMatch.Sigil
 
@@ -42,8 +44,8 @@ defmodule Marvin.Matcher do
 
   defp match_dispatch do
     quote location: :keep do
-      def call(event) do
-        case match_handler(event) do
+      def call(event, opts) do
+        case match_handler(super(event, opts)) do
           {handler, event} -> Marvin.Matcher.__call__(event, handler)
           :error -> raise NoHandlerError, event: event
         end

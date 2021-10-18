@@ -63,7 +63,8 @@ defmodule Mix.Tasks.Mvn.NewTest do
 
       assert_file("#{@app_name}/lib/#{@app_name}_bot/endpoint.ex", fn file ->
         assert file =~ ~s"defmodule MvnAppBot.Endpoint"
-        assert file =~ ~s"matcher MvnAppBot.Matcher"
+        assert file =~ ~s"plug Marvin.Pipeline.Logger"
+        assert file =~ ~s"plug MvnAppBot.Matcher"
       end)
 
       assert_file("#{@app_name}/mix.exs", fn file ->

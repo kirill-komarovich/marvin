@@ -1,10 +1,10 @@
-defmodule Marvin.Matcher.ProcessorTest do
+defmodule Marvin.Event.ProcessorTest do
   use ExUnit.Case, async: true
 
   alias Marvin.Event.Processor
 
   defmodule Endpoint do
-    def call(%{target: target, converted_data: converted_data}) do
+    def call(%{target: target, converted_data: converted_data}, _opts) do
       send(target, {:endpoint, :converted_data, converted_data})
     end
   end
