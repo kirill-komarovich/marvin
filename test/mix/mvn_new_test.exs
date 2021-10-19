@@ -58,7 +58,7 @@ defmodule Mix.Tasks.Mvn.NewTest do
       assert_file("#{@app_name}/lib/#{@app_name}_bot/matcher.ex", fn file ->
         assert file =~ "defmodule MvnAppBot.Matcher"
         assert file =~ "handle ~m\"hello\", MvnAppBot.HelloHandler"
-        assert file =~ "handle ~r/*/, MvnAppBot.UnknownHandler"
+        assert file =~ "handle ~r/.*/, MvnAppBot.UnknownHandler"
       end)
 
       assert_file("#{@app_name}/lib/#{@app_name}_bot/endpoint.ex", fn file ->
