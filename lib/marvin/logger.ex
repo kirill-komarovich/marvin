@@ -1,13 +1,14 @@
 defmodule Marvin.Logger do
   require Logger
 
+  @doc false
   def install do
     handlers = %{
-      [:marvin, :poller, :start] => &marvin_poller_start/4,
-      [:marvin, :poller, :poll, :error] => &marvin_poller_poll_error/4,
-      [:marvin, :endpoint, :start] => &marvin_endpoint_start/4,
-      [:marvin, :endpoint, :stop] => &marvin_endpoint_stop/4,
-      [:marvin, :matcher_dispatch, :start] => &marvin_matcher_dispatch_start/4
+      [:marvin, :poller, :start] => &__MODULE__.marvin_poller_start/4,
+      [:marvin, :poller, :poll, :error] => &__MODULE__.marvin_poller_poll_error/4,
+      [:marvin, :endpoint, :start] => &__MODULE__.marvin_endpoint_start/4,
+      [:marvin, :endpoint, :stop] => &__MODULE__.marvin_endpoint_stop/4,
+      [:marvin, :matcher_dispatch, :start] => &__MODULE__.marvin_matcher_dispatch_start/4
     }
 
     for {key, fun} <- handlers do
@@ -15,6 +16,7 @@ defmodule Marvin.Logger do
     end
   end
 
+  @doc false
   def duration(duration) do
     duration = System.convert_time_unit(duration, :native, :microsecond)
 
@@ -25,11 +27,13 @@ defmodule Marvin.Logger do
     end
   end
 
-  defp marvin_poller_start(_, _, %{adapter: adapter}, _) do
+  @doc false
+  def marvin_poller_start(_, _, %{adapter: adapter}, _) do
     Logger.log(:info, fn -> ["Start poll with", ?\s, apply(adapter, :name, [])] end, [])
   end
 
-  defp marvin_poller_poll_error(_, _, %{adapter: adapter, error: error}, _) do
+  @doc false
+  def marvin_poller_poll_error(_, _, %{adapter: adapter, error: error}, _) do
     Logger.log(
       :error,
       fn -> ["Error while polling", ?\s, apply(adapter, :name, []), ?:, ?\s, inspect(error)] end,
@@ -37,7 +41,8 @@ defmodule Marvin.Logger do
     )
   end
 
-  defp marvin_endpoint_start(_, _, %{event: event}, _) do
+  @doc false
+  def marvin_endpoint_start(_, _, %{event: event}, _) do
     Logger.log(
       :info,
       fn ->
@@ -58,7 +63,8 @@ defmodule Marvin.Logger do
     )
   end
 
-  defp marvin_endpoint_stop(_, %{duration: duration}, %{event: event}, _) do
+  @doc false
+  def marvin_endpoint_stop(_, %{duration: duration}, %{event: event}, _) do
     Logger.log(
       :info,
       fn ->
@@ -68,7 +74,8 @@ defmodule Marvin.Logger do
     )
   end
 
-  defp marvin_matcher_dispatch_start(_, _, metadata, _) do
+  @doc false
+  def marvin_matcher_dispatch_start(_, _, metadata, _) do
     %{handler: handler, event: event} = metadata
 
     Logger.log(
