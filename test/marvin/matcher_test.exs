@@ -1,8 +1,6 @@
 defmodule Marvin.MatcherTest do
   use ExUnit.Case, async: true
 
-  import ExUnit.CaptureLog
-  import BubbleMatch.Sigil
   alias Marvin.Event
 
   defmodule RegexHandler do
@@ -17,25 +15,17 @@ defmodule Marvin.MatcherTest do
     end
   end
 
-  defmodule BubbleHandler do
-    def call(event, _opts) do
-      {__MODULE__, event}
-    end
-  end
-
   defmodule Matcher do
     use Marvin.Matcher
 
     handle ~r/test_regex/, RegexHandler
     handle "test_string", StringHandler
-    handle ~m"hello [0-1=name]", BubbleHandler
   end
 
   test "__handlers__/0 returns all registered handlers with patterns" do
     expected = [
       {RegexHandler, {~r/test_regex/, []}},
-      {StringHandler, {"test_string", []}},
-      {BubbleHandler, {~m"hello [0-1=name]", []}}
+      {StringHandler, {"test_string", []}}
     ]
 
     assert Matcher.__handlers__() == expected
@@ -55,15 +45,6 @@ defmodule Marvin.MatcherTest do
     assert {StringHandler, ^event} = Matcher.call(event, [])
   end
 
-  @tag capture_log: true
-  test "call/2 when triggers bubble pattern" do
-    name = "user"
-    event = %Event{text: "hello #{name}"}
-    updated_event = %{event | params: %{"name" => [name]}}
-
-    assert {BubbleHandler, ^updated_event} = Matcher.call(event, [])
-  end
-
   test "call/2 when no handler found" do
     event = %Event{text: "unknown", platform: :unknown}
     message = "no handler found for #{event.platform} message: #{event.text}"
@@ -71,15 +52,6 @@ defmodule Marvin.MatcherTest do
     assert_raise Marvin.Matcher.NoHandlerError, message, fn ->
       Matcher.call(event, [])
     end
-  end
-
-  test "call/2 logs matcher start dispatch" do
-    name = "user"
-    event = %Event{text: "hello #{name}"}
-    fun = fn -> Matcher.call(event, []) end
-
-    assert capture_log(fun) =~ ~r"\[info\]  Processing with Marvin\.MatcherTest\.BubbleHandler"u
-    assert capture_log(fun) =~ ~r"Params: \%\{\"name\" => \[\"#{name}\"\]\}"u
   end
 
   @tag capture_log: true

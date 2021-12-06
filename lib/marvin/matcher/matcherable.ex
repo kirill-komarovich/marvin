@@ -41,25 +41,3 @@ defimpl Marvin.Matcher.Matcherable, for: BitString do
     end
   end
 end
-
-defimpl Marvin.Matcher.Matcherable, for: BubbleMatch do
-  def match(pattern, %Marvin.Event{text: text}, opts) do
-    case BubbleMatch.match(pattern, text) do
-      {:match, params} -> {:match, process_params(params, opts)}
-      :nomatch -> :nomatch
-    end
-  end
-
-  defp process_params(params, _opts) when map_size(params) == 0, do: %{}
-
-  defp process_params(params, opts) when is_map(params) do
-    joiner = Keyword.get(opts, :join, nil)
-
-    Map.new(params, fn {key, values} ->
-      values = Enum.map(values, fn %BubbleMatch.Token{raw: value} -> value end)
-      values = if joiner != nil, do: Enum.join(values, joiner), else: values
-
-      {key, values}
-    end)
-  end
-end

@@ -34,7 +34,6 @@ defmodule Marvin.Matcher do
       use Marvin.Pipeline.Builder
 
       import Marvin.Matcher
-      import BubbleMatch.Sigil
 
       @before_compile Marvin.Matcher
 
