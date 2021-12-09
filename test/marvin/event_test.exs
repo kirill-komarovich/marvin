@@ -9,6 +9,21 @@ defmodule Marvin.EventTest do
     def send_message(event, text, opts) do
       send(self(), [event, text, opts])
     end
+
+    def edit_message(event, text, opts) do
+      send(self(), [event, text, opts])
+    end
+
+    def from(%{from: from}) do
+      raw = from
+      from = from
+
+      %Marvin.Event.From{
+        id: from[:id],
+        username: from[:username],
+        raw: raw
+      }
+    end
   end
 
   test "send_message/2 calls send_message adapter function with given text" do
@@ -88,9 +103,38 @@ defmodule Marvin.EventTest do
     assert %Event{halted: true} = Event.halt(event)
   end
 
-  test "halt/1 does not update halt attribute when event already halted" do
-    event = %Event{halted: true}
+  test "edit_message/2 calls edit_message adapter function with given text" do
+    event = %Event{adapter: TestAdapter}
+    text = "some reply"
+    Event.edit_message(event, text)
 
-    assert ^event = Event.halt(event)
+    assert_receive [^event, ^text, []]
+  end
+
+  test "edit_message/3 calls edit_message adapter function with given text and opts" do
+    event = %Event{adapter: TestAdapter}
+    text = "some reply"
+    opts = [markup: "some_markup"]
+    Event.edit_message(event, text, opts)
+
+    assert_receive [^event, ^text, ^opts]
+  end
+
+  test "put_from/1 sets event sender to from assigns key" do
+    from = %{id: 1, username: "name"}
+    event = %Event{adapter: TestAdapter, raw_event: %{from: from}}
+
+    assert %Marvin.Event{
+             assigns: %{
+               from: %Event.From{
+                 id: id,
+                 username: username,
+                 raw: ^from
+               }
+             }
+           } = Event.put_from(event)
+
+    assert id == from[:id]
+    assert username == from[:username]
   end
 end

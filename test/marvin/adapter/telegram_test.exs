@@ -13,6 +13,10 @@ defmodule Marvin.Adapter.TelegramTest do
     def send_message(chat_id, text, opts) do
       send(self(), {:send_message, chat_id, text, opts})
     end
+
+    def edit_message_text(chat_id, message_id, inline_message_id, text, opts) do
+      send(self(), {:edit_message_text, chat_id, message_id, inline_message_id, text, opts})
+    end
   end
 
   setup do
@@ -37,12 +41,9 @@ defmodule Marvin.Adapter.TelegramTest do
 
   test "send_message/3 sends message by chat_id" do
     chat_id = :chat_id
-
-    private = %{chat_id: chat_id}
-
     text = "message"
 
-    Telegram.send_message(%Marvin.Event{private: private}, text, [])
+    Telegram.send_message(%Marvin.Event{private: %{chat_id: chat_id}}, text, [])
 
     assert_receive {:send_message, ^chat_id, ^text, []}
   end
@@ -50,17 +51,80 @@ defmodule Marvin.Adapter.TelegramTest do
   test "send_message/3 with reply option sends message by chat_id" do
     chat_id = :chat_id
     message_id = :message_id
-
-    private = %{
-      message_id: message_id,
-      chat_id: chat_id
-    }
-
     text = "message"
 
-    Telegram.send_message(%Marvin.Event{private: private}, text, reply: true)
+    Telegram.send_message(
+      %Marvin.Event{private: %{message_id: message_id, chat_id: chat_id}},
+      text,
+      reply: true
+    )
 
     assert_receive {:send_message, ^chat_id, ^text, [reply_to_message_id: ^message_id]}
+  end
+
+  test "send_message/3 with keyboard option sends message with reply markup" do
+    chat_id = :chat_id
+    text = "message"
+    keyboard = %Marvin.Event.Keyboard{type: :inline}
+    markup = %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: [[]]}
+
+    Telegram.send_message(%Marvin.Event{private: %{chat_id: chat_id}}, text, keyboard: keyboard)
+
+    assert_receive {:send_message, ^chat_id, ^text, [reply_markup: ^markup]}
+  end
+
+  test "send_message/3 with unknown option sends message by chat_id" do
+    chat_id = :chat_id
+    text = "message"
+
+    Telegram.send_message(%Marvin.Event{private: %{chat_id: chat_id}}, text, unknown: :value)
+
+    assert_receive {:send_message, ^chat_id, ^text, []}
+  end
+
+  test "edit_message/3 edits messages by chat_id and message_id" do
+    chat_id = :chat_id
+    message_id = :message_id
+    text = "message"
+
+    Telegram.edit_message(
+      %Marvin.Event{private: %{chat_id: chat_id, message_id: message_id}},
+      text,
+      []
+    )
+
+    assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
+  end
+
+  test "edit_message/3 with keyboard option edits messages by chat_id and message_id with reply markup" do
+    chat_id = :chat_id
+    message_id = :message_id
+    text = "message"
+    keyboard = %Marvin.Event.Keyboard{type: :inline}
+    markup = %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: [[]]}
+
+    Telegram.edit_message(
+      %Marvin.Event{private: %{chat_id: chat_id, message_id: message_id}},
+      text,
+      keyboard: keyboard
+    )
+
+    assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text,
+                    [reply_markup: ^markup]}
+  end
+
+  test "edit_message/3 with unknown option edits messages by chat_id and message_id" do
+    chat_id = :chat_id
+    message_id = :message_id
+    text = "message"
+
+    Telegram.edit_message(
+      %Marvin.Event{private: %{chat_id: chat_id, message_id: message_id}},
+      text,
+      unknown: :value
+    )
+
+    assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
   end
 
   test "event/1 converts Nadia.Update to Marvin.Event" do
@@ -174,5 +238,94 @@ defmodule Marvin.Adapter.TelegramTest do
              },
              raw_event: ^update
            } = Telegram.event(update)
+  end
+
+  test "event/1 with callback_query Nadia.Update to Marvin.Event" do
+    update = %Nadia.Model.Update{
+      update_id: :update_id,
+      callback_query: %Nadia.Model.CallbackQuery{
+        data: "some_data",
+        message: %Nadia.Model.Message{
+          text: "",
+          entities: nil,
+          message_id: :message_id,
+          chat: %{
+            id: :chat_id
+          }
+        }
+      }
+    }
+
+    assert %Marvin.Event{
+             adapter: Telegram,
+             platform: :telegram,
+             text: "some_data",
+             private: %{
+               edited?: false,
+               command?: false,
+               event_id: :update_id,
+               chat_id: :chat_id,
+               message_id: :message_id
+             },
+             raw_event: ^update
+           } = Telegram.event(update)
+  end
+
+  test "from/1 extracts sender and converts it to marvin structure" do
+    from = %Nadia.Model.User{
+      id: 1,
+      first_name: "f_name",
+      last_name: "l_name",
+      username: "u_name"
+    }
+
+    update = %Nadia.Model.Update{
+      update_id: :update_id,
+      message: %Nadia.Model.Message{
+        from: from
+      }
+    }
+
+    assert %Marvin.Event.From{
+             id: id,
+             first_name: first_name,
+             last_name: last_name,
+             username: username,
+             raw: ^from
+           } = Telegram.from(update)
+
+    assert id == from.id
+    assert first_name == from.first_name
+    assert last_name == from.last_name
+    assert username == from.username
+  end
+
+  test "from/1 with callback_query extracts sender and converts it to marvin structure" do
+    from = %Nadia.Model.User{
+      id: 1,
+      first_name: "f_name",
+      last_name: "l_name",
+      username: "u_name"
+    }
+
+    update = %Nadia.Model.Update{
+      update_id: :update_id,
+      callback_query: %Nadia.Model.CallbackQuery{
+        from: from
+      }
+    }
+
+    assert %Marvin.Event.From{
+             id: id,
+             first_name: first_name,
+             last_name: last_name,
+             username: username,
+             raw: ^from
+           } = Telegram.from(update)
+
+    assert id == from.id
+    assert first_name == from.first_name
+    assert last_name == from.last_name
+    assert username == from.username
   end
 end

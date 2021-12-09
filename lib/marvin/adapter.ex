@@ -16,5 +16,8 @@ defmodule Marvin.Adapter do
               {:ok, updates :: [term()]} | {:error, reason :: term()}
   @callback send_message(update :: Marvin.Event.t(), text :: String.t(), opts :: keyword()) ::
               Marvin.Event.t()
+  @callback edit_message(update :: Marvin.Event.t(), text :: String.t(), opts :: keyword()) ::
+              Marvin.Event.t()
   @callback event(update :: term()) :: Marvin.Event.t()
+  @callback from(update :: term()) :: Marvin.Event.From.t()
 end

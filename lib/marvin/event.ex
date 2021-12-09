@@ -74,6 +74,23 @@ defmodule Marvin.Event do
     event
   end
 
+  @doc """
+  Edit message with current adapter
+
+  ## Example:
+
+    #{__MODULE__}.edit_message(event, "Hello!", keyboard: keyboard)
+
+  """
+  @spec edit_message(t(), String.t(), keyword) :: t()
+  def edit_message(%__MODULE__{adapter: adapter} = event, text, opts \\ []) do
+    event = run_before_send(event)
+
+    apply(adapter, :edit_message, [event, text, opts])
+
+    event
+  end
+
   defp run_before_send(%__MODULE__{before_send: before_send} = event) do
     Enum.reduce(before_send, event, & &1.(&2))
   end
@@ -148,11 +165,14 @@ defmodule Marvin.Event do
 
   """
   @spec halt(t()) :: t()
-  def halt(event)
-
-  def halt(%__MODULE__{halted: true} = event), do: event
-
   def halt(%__MODULE__{} = event) do
     %{event | halted: true}
+  end
+
+  @spec put_from(t()) :: t()
+  def put_from(%__MODULE__{adapter: adapter, raw_event: raw_event} = event) do
+    from = apply(adapter, :from, [raw_event])
+
+    put_assigns(event, :from, from)
   end
 end
