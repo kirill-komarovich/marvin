@@ -49,6 +49,8 @@ defmodule Marvin.Pipeline.Builder do
     end
   end
 
+  # TODO: builder_opts macro
+
   @spec compile(
           Macro.Env.t(),
           [{Marvin.Pipeline.Builder.pipeline(), Marvin.Pipeline.opts(), Macro.t()}],
