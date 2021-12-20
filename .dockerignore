@@ -6,4 +6,10 @@ deps/
 docker-compose.yml
 Dockerfile
 README.md
+.dockerignore
+.elixir_ls
+.git
+.github
+tmp/
 priv/
+!priv/templates

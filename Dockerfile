@@ -1,4 +1,4 @@
-FROM elixir:1.10.4-alpine
+FROM elixir:1.12.3-alpine
 
 ARG MIX_ENV
 ARG MIX_HOME=/root/.mix

@@ -166,8 +166,6 @@ defmodule Marvin.Pipeline.BuilderTest do
              ~r"\[info\]  #{inspect(HaltedWithLogFunctionPipeline)} halted in :log_on_halt/2"u
 
     assert capture_log(module_pipeline) =~
-             ~r"\[info\]  #{inspect(HaltedWithLogModulePipeline)} halted in #{
-               inspect(HaltedWithLogModulePipeline.HaltPipeline)
-             }.call/2"u
+             ~r"\[info\]  #{inspect(HaltedWithLogModulePipeline)} halted in #{inspect(HaltedWithLogModulePipeline.HaltPipeline)}.call/2"u
   end
 end
