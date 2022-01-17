@@ -14,6 +14,10 @@ defmodule Marvin.EventTest do
       send(self(), [event, text, opts])
     end
 
+    def answer_callback(event, text, opts) do
+      send(self(), [event, text, opts])
+    end
+
     def from(%{from: from}) do
       raw = from
       from = from
@@ -136,5 +140,24 @@ defmodule Marvin.EventTest do
 
     assert id == from[:id]
     assert username == from[:username]
+  end
+
+  test "answer_callback/2 calls answer_callback adapter function with given text" do
+    event = %Event{adapter: TestAdapter}
+    text = "some reply"
+
+    Event.answer_callback(event, text)
+
+    assert_receive [^event, ^text, []]
+  end
+
+  test "answer_callback/3 calls answer_callback adapter function with given text and opts" do
+    event = %Event{adapter: TestAdapter}
+    text = "some reply"
+    opts = [alert: true]
+
+    Event.answer_callback(event, text, opts)
+
+    assert_receive [^event, ^text, ^opts]
   end
 end

@@ -8,6 +8,7 @@ defmodule Marvin.Adapter.Telegram do
   @command_entity_type "bot_command"
   @platform :telegram
 
+  # TODO: change to keywords?
   @impl true
   def get_updates(opts) when is_map(opts) do
     offset = Map.get(opts, :offset)
@@ -17,9 +18,10 @@ defmodule Marvin.Adapter.Telegram do
 
   @impl true
   def send_message(%Marvin.Event{private: private}, text, opts) do
+    adapter_opts = adapter_opts(opts)
     options = send_options(private, opts)
 
-    run_command(:send_message, [private[:chat_id], text, options])
+    run_command(:send_message, [private[:chat_id], text, options ++ adapter_opts])
   end
 
   defp send_options(private, opts) do
@@ -37,11 +39,18 @@ defmodule Marvin.Adapter.Telegram do
 
   @impl true
   def edit_message(%Marvin.Event{private: private}, text, opts) do
+    adapter_opts = adapter_opts(opts)
     options = edit_options(opts)
 
     run_command(
       :edit_message_text,
-      [private[:chat_id], private[:message_id], private[:inline_message_id], text, options]
+      [
+        private[:chat_id],
+        private[:message_id],
+        private[:inline_message_id],
+        text,
+        options ++ adapter_opts
+      ]
     )
   end
 
@@ -56,6 +65,19 @@ defmodule Marvin.Adapter.Telegram do
   end
 
   @impl true
+  def answer_callback(%Marvin.Event{private: private}, text, opts) do
+    alert? = Keyword.get(opts, :alert, false)
+
+    run_command(:answer_callback_query, [private[:callback_id], [text: text, show_alert: alert?]])
+  end
+
+  defp adapter_opts(opts) do
+    opts
+    |> Keyword.get(:adapter_opts, [])
+    |> Keyword.get(@platform, [])
+  end
+
+  @impl true
   def event(%Nadia.Model.Update{callback_query: callback_query} = update) do
     {message, edited?} = extract_message(update)
 
@@ -67,6 +89,9 @@ defmodule Marvin.Adapter.Telegram do
     }
     |> Marvin.Event.put_private(:edited?, edited?)
     |> Marvin.Event.put_private(:command?, command?(message))
+    |> Marvin.Event.put_private(:callback?, callback?(callback_query))
+    |> Marvin.Event.put_private(:callback_id, callback_id(callback_query))
+    |> Marvin.Event.put_private(:callback_message_text, callback_message_text(callback_query))
     |> Marvin.Event.put_private(:event_id, event_id(update))
     |> Marvin.Event.put_private(:message_id, message_id(message))
     |> Marvin.Event.put_private(:chat_id, chat_id(message))
@@ -91,9 +116,20 @@ defmodule Marvin.Adapter.Telegram do
 
   defp command?(%{}), do: false
 
+  defp callback?(%Nadia.Model.CallbackQuery{}), do: true
+  defp callback?(_), do: false
+
+  defp callback_id(%Nadia.Model.CallbackQuery{id: id}), do: id
+  defp callback_id(_), do: nil
+
   defp event_text(%Nadia.Model.CallbackQuery{data: data}), do: data
   defp event_text(%Nadia.Model.Message{text: text, sticker: sticker}), do: text || sticker.emoji
   defp event_text(%{text: text}), do: text
+
+  defp callback_message_text(%Nadia.Model.CallbackQuery{message: message}),
+    do: event_text(message)
+
+  defp callback_message_text(_), do: nil
 
   defp event_id(%Nadia.Model.Update{update_id: update_id}), do: update_id
 
@@ -106,11 +142,7 @@ defmodule Marvin.Adapter.Telegram do
     convert_from(from)
   end
 
-  def from(%Nadia.Model.Update{callback_query: callback_query}) do
-    from(callback_query)
-  end
-
-  def from(%Nadia.Model.CallbackQuery{from: from}) do
+  def from(%Nadia.Model.Update{callback_query: %Nadia.Model.CallbackQuery{from: from}}) do
     convert_from(from)
   end
 
@@ -132,7 +164,13 @@ defmodule Marvin.Adapter.Telegram do
 
     module = Application.get_env(:marvin, :telegram_adapter, Nadia)
 
-    # TODO: convert errors to internal Error struct
-    apply(module, command, args)
+    # TODO: convert errors to internal Error struct?
+    case apply(module, command, args) do
+      {:error, error} ->
+        raise "Failed to process `#{command}` with #{inspect(args)} arguments.\n\nReason: #{inspect(error)}"
+
+      value ->
+        value
+    end
   end
 end

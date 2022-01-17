@@ -17,6 +17,10 @@ defmodule Marvin.Adapter.TelegramTest do
     def edit_message_text(chat_id, message_id, inline_message_id, text, opts) do
       send(self(), {:edit_message_text, chat_id, message_id, inline_message_id, text, opts})
     end
+
+    def answer_callback_query(callback_id, opts) do
+      send(self(), {:answer_callback_query, callback_id, opts})
+    end
   end
 
   setup do
@@ -125,6 +129,32 @@ defmodule Marvin.Adapter.TelegramTest do
     )
 
     assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
+  end
+
+  test "answer_callback/3 sends callback answer by callback_id" do
+    callback_id = :callback_id
+    text = "alert"
+
+    Telegram.answer_callback(
+      %Marvin.Event{private: %{callback_id: callback_id}},
+      text,
+      []
+    )
+
+    assert_receive {:answer_callback_query, ^callback_id, [text: ^text, show_alert: false]}
+  end
+
+  test "answer_callback/3 with alert option sends callback answer by callback_id as alert" do
+    callback_id = :callback_id
+    text = "alert"
+
+    Telegram.answer_callback(
+      %Marvin.Event{private: %{callback_id: callback_id}},
+      text,
+      alert: true
+    )
+
+    assert_receive {:answer_callback_query, ^callback_id, [text: ^text, show_alert: true]}
   end
 
   test "event/1 converts Nadia.Update to Marvin.Event" do

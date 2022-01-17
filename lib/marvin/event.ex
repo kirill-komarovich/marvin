@@ -57,18 +57,20 @@ defmodule Marvin.Event do
   ## Example:
 
     #{__MODULE__}.send_messages(event, [{"Hello!", reply: true}, "how are you?")
+    #{__MODULE__}.send_messages(event, ["Hello!", "how are you?"], reply: true)
 
   """
-  @spec send_messages(t(), [{String.t(), keyword} | String.t()]) :: t()
-  def send_messages(%__MODULE__{adapter: adapter} = event, messages) do
+  @spec send_messages(t(), [{String.t(), keyword()} | String.t()]) :: t()
+  def send_messages(%__MODULE__{adapter: adapter} = event, messages, opts \\ []) do
+    # TODO: change to multi(&handler/1) API?
     event = run_before_send(event)
 
     Enum.each(messages, fn
-      {text, opts} ->
-        apply(adapter, :send_message, [event, text, opts])
+      {text, message_opts} ->
+        apply(adapter, :send_message, [event, text, message_opts ++ opts])
 
       text when is_binary(text) ->
-        apply(adapter, :send_message, [event, text, []])
+        apply(adapter, :send_message, [event, text, opts])
     end)
 
     event
@@ -82,11 +84,23 @@ defmodule Marvin.Event do
     #{__MODULE__}.edit_message(event, "Hello!", keyboard: keyboard)
 
   """
-  @spec edit_message(t(), String.t(), keyword) :: t()
+  @spec edit_message(event :: t(), text :: String.t(), opts :: keyword()) :: t()
   def edit_message(%__MODULE__{adapter: adapter} = event, text, opts \\ []) do
     event = run_before_send(event)
 
     apply(adapter, :edit_message, [event, text, opts])
+
+    event
+  end
+
+  @doc """
+
+  """
+  @spec answer_callback(event :: t(), text :: String.t(), opts :: keyword()) :: t()
+  def answer_callback(%__MODULE__{adapter: adapter} = event, text, opts \\ []) do
+    event = run_before_send(event)
+
+    apply(adapter, :answer_callback, [event, text, opts])
 
     event
   end
