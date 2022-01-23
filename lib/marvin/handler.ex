@@ -15,10 +15,13 @@ defmodule Marvin.Handler do
 
       @before_compile Marvin.Handler
 
+      @doc false
       def init(opts), do: opts
 
+      @doc false
       def call(event, opts), do: handler_pipeline_call(event, opts)
 
+      @doc false
       def handler_call(%Marvin.Event{} = event, _opts) do
         handle(event, event.params)
       end

@@ -76,7 +76,7 @@ defmodule Marvin.Poller do
   """
   @spec poll(atom(), map(), (map(), [term()] -> map())) :: {:noreply, map()}
   def poll(adapter, %{endpoint: endpoint} = state, state_updater) do
-    case apply(adapter, :get_updates, [state]) do
+    case apply(adapter, :get_updates, [Enum.into(state, [])]) do
       {:ok, updates} ->
         process_updates(endpoint, adapter, updates)
         new_state = state_updater.(state, updates)

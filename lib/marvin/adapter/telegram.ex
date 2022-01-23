@@ -8,26 +8,39 @@ defmodule Marvin.Adapter.Telegram do
   @command_entity_type "bot_command"
   @platform :telegram
 
-  # TODO: change to keywords?
   @impl true
-  def get_updates(opts) when is_map(opts) do
-    offset = Map.get(opts, :offset)
+  def get_updates(opts) do
+    offset = Keyword.get(opts, :offset)
 
     run_command(:get_updates, [[offset: offset]])
   end
 
   @impl true
   def send_message(%Marvin.Event{private: private}, text, opts) do
-    adapter_opts = adapter_opts(opts)
-    options = send_options(private, opts)
-
-    run_command(:send_message, [private[:chat_id], text, options ++ adapter_opts])
+    send_message(private[:chat_id], text, convert_opts(private, opts))
   end
 
-  defp send_options(private, opts) do
+  def send_message(chat_id, text, opts) do
+    adapter_opts = adapter_opts(opts)
+    options = send_options(opts)
+
+    run_command(:send_message, [chat_id, text, options ++ adapter_opts])
+  end
+
+  defp convert_opts(private, opts) do
     Enum.reduce(opts, [], fn
       {:reply, true}, acc ->
-        Keyword.put(acc, :reply_to_message_id, private[:message_id])
+        Keyword.put(acc, :reply, private[:message_id])
+
+      {key, value}, acc ->
+        Keyword.put(acc, key, value)
+    end)
+  end
+
+  defp send_options(opts) do
+    Enum.reduce(opts, [], fn
+      {:reply, message_id}, acc ->
+        Keyword.put(acc, :reply_to_message_id, message_id)
 
       {:keyboard, keyboard}, acc ->
         Keyword.put(acc, :reply_markup, Marvin.Adapter.Telegram.Keyboard.to_markup(keyboard))
@@ -39,15 +52,19 @@ defmodule Marvin.Adapter.Telegram do
 
   @impl true
   def edit_message(%Marvin.Event{private: private}, text, opts) do
+    edit_message(private[:chat_id], private[:message_id], private[:inline_message_id], text, opts)
+  end
+
+  def edit_message(chat_id, message_id, inline_message_id, text, opts) do
     adapter_opts = adapter_opts(opts)
     options = edit_options(opts)
 
     run_command(
       :edit_message_text,
       [
-        private[:chat_id],
-        private[:message_id],
-        private[:inline_message_id],
+        chat_id,
+        message_id,
+        inline_message_id,
         text,
         options ++ adapter_opts
       ]
@@ -87,14 +104,16 @@ defmodule Marvin.Adapter.Telegram do
       text: event_text(callback_query || message),
       raw_event: update
     }
-    |> Marvin.Event.put_private(:edited?, edited?)
-    |> Marvin.Event.put_private(:command?, command?(message))
-    |> Marvin.Event.put_private(:callback?, callback?(callback_query))
-    |> Marvin.Event.put_private(:callback_id, callback_id(callback_query))
-    |> Marvin.Event.put_private(:callback_message_text, callback_message_text(callback_query))
-    |> Marvin.Event.put_private(:event_id, event_id(update))
-    |> Marvin.Event.put_private(:message_id, message_id(message))
-    |> Marvin.Event.put_private(:chat_id, chat_id(message))
+    |> Marvin.Event.merge_private(
+      edited?: edited?,
+      command?: command?(message),
+      callback?: callback?(callback_query),
+      callback_id: callback_id(callback_query),
+      callback_message_text: callback_message_text(callback_query),
+      event_id: event_id(update),
+      message_id: message_id(message),
+      chat_id: chat_id(message)
+    )
   end
 
   defp extract_message(%Nadia.Model.Update{

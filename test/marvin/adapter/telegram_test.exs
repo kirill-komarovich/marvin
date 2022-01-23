@@ -38,12 +38,12 @@ defmodule Marvin.Adapter.TelegramTest do
   test "get_updates/1 returns list of updates" do
     offset = 1
 
-    assert [%Nadia.Model.Update{}] = Telegram.get_updates(%{offset: offset})
+    assert [%Nadia.Model.Update{}] = Telegram.get_updates(offset: offset)
 
     assert_receive {:get_updates, [offset: ^offset]}
   end
 
-  test "send_message/3 sends message by chat_id" do
+  test "send_message/3 sends message by chat_id inside event" do
     chat_id = :chat_id
     text = "message"
 
@@ -52,7 +52,16 @@ defmodule Marvin.Adapter.TelegramTest do
     assert_receive {:send_message, ^chat_id, ^text, []}
   end
 
-  test "send_message/3 with reply option sends message by chat_id" do
+  test "send_message/3 sends message by chat_id" do
+    chat_id = :chat_id
+    text = "message"
+
+    Telegram.send_message(chat_id, text, [])
+
+    assert_receive {:send_message, ^chat_id, ^text, []}
+  end
+
+  test "send_message/3 with reply option sends message by chat_id and message_id inside event" do
     chat_id = :chat_id
     message_id = :message_id
     text = "message"
@@ -61,6 +70,20 @@ defmodule Marvin.Adapter.TelegramTest do
       %Marvin.Event{private: %{message_id: message_id, chat_id: chat_id}},
       text,
       reply: true
+    )
+
+    assert_receive {:send_message, ^chat_id, ^text, [reply_to_message_id: ^message_id]}
+  end
+
+  test "send_message/3 with reply option sends message by chat_id and message_id" do
+    chat_id = :chat_id
+    message_id = :message_id
+    text = "message"
+
+    Telegram.send_message(
+      chat_id,
+      text,
+      reply: message_id
     )
 
     assert_receive {:send_message, ^chat_id, ^text, [reply_to_message_id: ^message_id]}
@@ -86,7 +109,7 @@ defmodule Marvin.Adapter.TelegramTest do
     assert_receive {:send_message, ^chat_id, ^text, []}
   end
 
-  test "edit_message/3 edits messages by chat_id and message_id" do
+  test "edit_message/3 edits messages by chat_id and message_id inside event" do
     chat_id = :chat_id
     message_id = :message_id
     text = "message"
@@ -96,6 +119,16 @@ defmodule Marvin.Adapter.TelegramTest do
       text,
       []
     )
+
+    assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
+  end
+
+  test "edit_message/3 edits messages by chat_id and message_id" do
+    chat_id = :chat_id
+    message_id = :message_id
+    text = "message"
+
+    Telegram.edit_message(chat_id, message_id, nil, text, [])
 
     assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
   end

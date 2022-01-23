@@ -1,8 +1,6 @@
 defmodule Marvin.EventTest do
   use ExUnit.Case, async: true
 
-  doctest Marvin.Event
-
   alias Marvin.Event
 
   defmodule TestAdapter do
@@ -95,10 +93,22 @@ defmodule Marvin.EventTest do
     assert %Event{assigns: %{key: "new value"}} = Event.put_assigns(event, :key, "new value")
   end
 
+  test "merge_assigns/2 updates assigns attributes" do
+    event = %Event{assigns: %{}}
+
+    assert %Event{assigns: %{key: "value"}} = Event.merge_assigns(event, key: "value")
+  end
+
   test "put_private/3 updates private attributes" do
     event = %Event{private: %{key: "value"}}
 
     assert %Event{private: %{key: "new value"}} = Event.put_private(event, :key, "new value")
+  end
+
+  test "merge_private/2 updates assigns attributes" do
+    event = %Event{private: %{}}
+
+    assert %Event{private: %{key: "value"}} = Event.merge_private(event, key: "value")
   end
 
   test "halt/1 updates halt attribute" do

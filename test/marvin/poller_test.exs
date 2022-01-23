@@ -17,7 +17,7 @@ defmodule Marvin.PollerTest do
     def name, do: "Adapter"
 
     def get_updates(state) do
-      Map.get(state, :response, {:ok, []})
+      Keyword.get(state, :response, {:ok, []})
     end
   end
 

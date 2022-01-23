@@ -37,9 +37,11 @@ defmodule Marvin.Event do
   @doc """
   Sends text message with current adapter
 
-  ## Example:
+  ## Examples
 
-    #{__MODULE__}.send_message(event, "Hello!", reply: true)
+    iex> send_message(event, "Hello!")
+    iex> send_message(event, "Hello!", reply: true)
+    iex> send_message(event, "Hello!", keyboard: keyboard)
 
   """
   @spec send_message(t(), String.t(), keyword) :: t()
@@ -54,10 +56,10 @@ defmodule Marvin.Event do
   @doc """
   Sends list of text messages with current adapter
 
-  ## Example:
+  ## Examples
 
-    #{__MODULE__}.send_messages(event, [{"Hello!", reply: true}, "how are you?")
-    #{__MODULE__}.send_messages(event, ["Hello!", "how are you?"], reply: true)
+    iex> send_messages(event, [{"Hello!", reply: true}, "how are you?")
+    iex> send_messages(event, ["Hello!", "how are you?"], reply: true)
 
   """
   @spec send_messages(t(), [{String.t(), keyword()} | String.t()]) :: t()
@@ -79,9 +81,10 @@ defmodule Marvin.Event do
   @doc """
   Edit message with current adapter
 
-  ## Example:
+  ## Examples
 
-    #{__MODULE__}.edit_message(event, "Hello!", keyboard: keyboard)
+    iex> edit_message(event, "Hello!")
+    iex> edit_message(event, "Hello!", keyboard: keyboard)
 
   """
   @spec edit_message(event :: t(), text :: String.t(), opts :: keyword()) :: t()
@@ -94,6 +97,12 @@ defmodule Marvin.Event do
   end
 
   @doc """
+  Answers to received callback query
+
+   ## Examples
+
+    iex> answer_callback(event, "Hello!")
+    iex> answer_callback(event, "Hello!", alert: true)
 
   """
   @spec answer_callback(event :: t(), text :: String.t(), opts :: keyword()) :: t()
@@ -129,9 +138,13 @@ defmodule Marvin.Event do
   @doc """
   Updates params attribute of current event
 
-  ## Example:
+  ## Examples
 
-    #{__MODULE__}.update_params(event, %{"param" => "value"})
+    iex> event.params
+    %{}
+    iex> update_params(event, %{"param" => "value"})
+    iex> event.params
+    %{"param" => "value"}
 
   """
   @spec update_params(t(), params()) :: t()
@@ -148,9 +161,13 @@ defmodule Marvin.Event do
   @doc """
   Assigns a new **assigns** key and value in the event.
 
-  ## Example:
+  ## Examples
 
-    #{__MODULE__}.put_assigns(event, :assigns_key, :value)
+      iex> event.assigns[:assigns_key]
+      nil
+      iex> event = put_assigns(event, :assigns_key, :value)
+      iex> event.put_assigns[:assigns_key]
+      :value
 
   """
   @spec put_assigns(t(), atom(), term()) :: t()
@@ -159,11 +176,33 @@ defmodule Marvin.Event do
   end
 
   @doc """
+  Assigns multiple values to keys in the event.
+  Equivalent to multiple calls to `put_assigns/3`.
+
+  ## Examples
+
+      iex> event.assigns[:assigns_key]
+      nil
+      iex> event = merge_assigns(event, assigns_key: :value)
+      iex> event.assigns[:assigns_key]
+      :value
+
+  """
+  @spec merge_assigns(t(), keyword()) :: t()
+  def merge_assigns(%__MODULE__{assigns: assigns} = event, keyword) when is_list(keyword) do
+    %{event | assigns: Enum.into(keyword, assigns)}
+  end
+
+  @doc """
   Assigns a new **private** key and value in the event.
 
-  ## Example:
+  ## Examples
 
-    #{__MODULE__}.put_private(event, :private_key, :value)
+      iex> event.private[:private_key]
+      nil
+      iex> event = put_private(event, :private_key, :value)
+      iex> event.private[:private_key]
+      :value
 
   """
   @spec put_private(t(), atom(), term()) :: t()
@@ -172,10 +211,31 @@ defmodule Marvin.Event do
   end
 
   @doc """
-  Marks event as halted
-  ## Example:
+  Assigns multiple **private** keys and values in the event.
+  Equivalent to multiple `put_private/3` calls.
 
-    #{__MODULE__}.halt(event)
+  ## Examples
+      iex> event.private[:private_key]
+      nil
+      iex> event = merge_private(event, private_key: :value)
+      iex> event.private[:private_key]
+      :value
+
+  """
+  @spec merge_private(t(), keyword()) :: t()
+  def merge_private(%__MODULE__{private: private} = event, keyword) when is_list(keyword) do
+    %{event | private: Enum.into(keyword, private)}
+  end
+
+  @doc """
+  Marks event as halted
+  ## Examples:
+
+    iex> event.halted
+    false
+    iex> halt(event)
+    iex> event.halted
+    true
 
   """
   @spec halt(t()) :: t()
@@ -183,6 +243,15 @@ defmodule Marvin.Event do
     %{event | halted: true}
   end
 
+  @doc """
+  Puts sender to event assigns as %Marvin.Event.From{} under :from key
+  ## Examples:
+
+    iex> put_from(event)
+    iex> event,assigns[:from]
+    %Marvin.Event.From{}
+
+  """
   @spec put_from(t()) :: t()
   def put_from(%__MODULE__{adapter: adapter, raw_event: raw_event} = event) do
     from = apply(adapter, :from, [raw_event])
