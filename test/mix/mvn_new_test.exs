@@ -45,6 +45,11 @@ defmodule Mix.Tasks.Mvn.NewTest do
 
       assert_file("#{@app_name}/test/test_helper.exs")
 
+      assert_file("#{@app_name}/test/support/event_case.ex", fn file ->
+        assert file =~ ~r/defmodule MvnAppBot.EventCase/
+        assert file =~ "@endpoint MvnAppBot.Endpoint"
+      end)
+
       assert_file("#{@app_name}/lib/#{@app_name}_bot/handlers/hello_handler.ex", fn file ->
         assert file =~ ~r/defmodule MvnAppBot.HelloHandler/
         assert file =~ "use MvnAppBot, :handler"

@@ -8,7 +8,6 @@ defmodule Marvin.Adapter.Telegram do
   @command_entity_type "bot_command"
   @platform :telegram
 
-  @impl true
   def get_updates(opts) do
     offset = Keyword.get(opts, :offset)
 
@@ -94,7 +93,6 @@ defmodule Marvin.Adapter.Telegram do
     |> Keyword.get(@platform, [])
   end
 
-  @impl true
   def event(%Nadia.Model.Update{callback_query: callback_query} = update) do
     {message, edited?} = extract_message(update)
 
@@ -102,6 +100,7 @@ defmodule Marvin.Adapter.Telegram do
       adapter: __MODULE__,
       platform: @platform,
       text: event_text(callback_query || message),
+      owner: self(),
       raw_event: update
     }
     |> Marvin.Event.merge_private(
@@ -114,6 +113,7 @@ defmodule Marvin.Adapter.Telegram do
       message_id: message_id(message),
       chat_id: chat_id(message)
     )
+    |> Marvin.Event.put_assigns(:from, from(update))
   end
 
   defp extract_message(%Nadia.Model.Update{
@@ -156,8 +156,11 @@ defmodule Marvin.Adapter.Telegram do
 
   defp chat_id(%{chat: %{id: chat_id}}), do: chat_id
 
-  @impl true
   def from(%Nadia.Model.Update{message: %{from: from}}) do
+    convert_from(from)
+  end
+
+  def from(%Nadia.Model.Update{edited_message: %{from: from}}) do
     convert_from(from)
   end
 
@@ -165,9 +168,9 @@ defmodule Marvin.Adapter.Telegram do
     convert_from(from)
   end
 
-  defp convert_from(from) do
+  defp convert_from(from) when is_map(from) do
     raw = from
-    from = Map.from_struct(from)
+    from = if is_nil(Map.get(from, :__struct__)), do: from, else: Map.from_struct(from)
 
     %Marvin.Event.From{
       id: from[:id],

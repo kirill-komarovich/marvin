@@ -12,14 +12,10 @@ defmodule Marvin.Adapter do
     end
   end
 
-  @callback get_updates(poller_state :: term()) ::
-              {:ok, updates :: [term()]} | {:error, reason :: term()}
   @callback send_message(event :: Marvin.Event.t(), text :: String.t(), opts :: keyword()) ::
-              Marvin.Event.t()
+              term()
   @callback edit_message(event :: Marvin.Event.t(), text :: String.t(), opts :: keyword()) ::
-              Marvin.Event.t()
+              term()
   @callback answer_callback(event :: Marvin.Event.t(), text :: String.t(), opts :: keyword()) ::
-              Marvin.Event.t()
-  @callback event(update :: term()) :: Marvin.Event.t()
-  @callback from(update :: term()) :: Marvin.Event.From.t()
+              term()
 end

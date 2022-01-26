@@ -55,7 +55,8 @@ defmodule Mix.Tasks.Mvn.New do
     {:eex, "app/README.md", :project, "README.md"},
     {:eex, "app/formatter.exs", :project, ".formatter.exs"},
     {:eex, "app/gitignore", :project, ".gitignore"},
-    {:eex, "app/test/test_helper.exs", :project, "test/test_helper.exs"}
+    {:eex, "app/test/test_helper.exs", :project, "test/test_helper.exs"},
+    {:eex, "app/test/support/event_case.ex", :project, "test/support/event_case.ex"}
   ])
 
   @impl true

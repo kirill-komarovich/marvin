@@ -4,11 +4,12 @@ defmodule Marvin.Event do
   """
 
   @type adapter :: module()
-  @type assigns :: %{optional(atom()) => any()}
-  @type params :: %{optional(String.t()) => any()}
+  @type assigns :: %{optional(atom()) => term()}
+  @type params :: %{optional(binary()) => term()}
   @type platform :: atom()
-  @type text :: String.t()
-  @type raw_event :: any()
+  @type text :: binary()
+  @type owner :: pid()
+  @type raw_event :: term()
   @type before_send_callback :: (t() -> t())
   @type before_send :: [before_send_callback()]
 
@@ -17,17 +18,19 @@ defmodule Marvin.Event do
           platform: platform(),
           raw_event: raw_event(),
           text: text(),
+          owner: owner(),
           params: params(),
           assigns: assigns(),
           private: assigns(),
           before_send: before_send(),
-          halted: false
+          halted: boolean()
         }
 
   defstruct adapter: Marvin.MissingAdapter,
             platform: nil,
             raw_event: nil,
             text: "",
+            owner: nil,
             params: %{},
             assigns: %{},
             private: %{},
@@ -44,11 +47,11 @@ defmodule Marvin.Event do
     iex> send_message(event, "Hello!", keyboard: keyboard)
 
   """
-  @spec send_message(t(), String.t(), keyword) :: t()
+  @spec send_message(t(), binary(), keyword) :: t()
   def send_message(%__MODULE__{adapter: adapter} = event, text, opts \\ []) do
     event = run_before_send(event)
 
-    apply(adapter, :send_message, [event, text, opts])
+    adapter.send_message(event, text, opts)
 
     event
   end
@@ -62,17 +65,17 @@ defmodule Marvin.Event do
     iex> send_messages(event, ["Hello!", "how are you?"], reply: true)
 
   """
-  @spec send_messages(t(), [{String.t(), keyword()} | String.t()]) :: t()
+  @spec send_messages(t(), [{binary(), keyword()} | binary()]) :: t()
   def send_messages(%__MODULE__{adapter: adapter} = event, messages, opts \\ []) do
     # TODO: change to multi(&handler/1) API?
     event = run_before_send(event)
 
     Enum.each(messages, fn
       {text, message_opts} ->
-        apply(adapter, :send_message, [event, text, message_opts ++ opts])
+        adapter.send_message(event, text, message_opts ++ opts)
 
       text when is_binary(text) ->
-        apply(adapter, :send_message, [event, text, opts])
+        adapter.send_message(event, text, opts)
     end)
 
     event
@@ -87,11 +90,11 @@ defmodule Marvin.Event do
     iex> edit_message(event, "Hello!", keyboard: keyboard)
 
   """
-  @spec edit_message(event :: t(), text :: String.t(), opts :: keyword()) :: t()
+  @spec edit_message(event :: t(), text :: binary(), opts :: keyword()) :: t()
   def edit_message(%__MODULE__{adapter: adapter} = event, text, opts \\ []) do
     event = run_before_send(event)
 
-    apply(adapter, :edit_message, [event, text, opts])
+    adapter.edit_message(event, text, opts)
 
     event
   end
@@ -105,11 +108,11 @@ defmodule Marvin.Event do
     iex> answer_callback(event, "Hello!", alert: true)
 
   """
-  @spec answer_callback(event :: t(), text :: String.t(), opts :: keyword()) :: t()
+  @spec answer_callback(event :: t(), text :: binary(), opts :: keyword()) :: t()
   def answer_callback(%__MODULE__{adapter: adapter} = event, text, opts \\ []) do
     event = run_before_send(event)
 
-    apply(adapter, :answer_callback, [event, text, opts])
+    adapter.answer_callback(event, text, opts)
 
     event
   end
@@ -254,8 +257,6 @@ defmodule Marvin.Event do
   """
   @spec put_from(t()) :: t()
   def put_from(%__MODULE__{adapter: adapter, raw_event: raw_event} = event) do
-    from = apply(adapter, :from, [raw_event])
-
-    put_assigns(event, :from, from)
+    put_assigns(event, :from, adapter.from(raw_event))
   end
 end

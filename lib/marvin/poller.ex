@@ -39,6 +39,7 @@ defmodule Marvin.Poller do
           %{adapter: @adapter}
         )
 
+        # TODO: Process.send_after
         :timer.send_interval(@timeout, :poll)
 
         {:ok, %{endpoint: endpoint}}

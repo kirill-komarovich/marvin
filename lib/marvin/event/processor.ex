@@ -18,8 +18,9 @@ defmodule Marvin.Event.Processor do
   end
 
   def handle_cast({:process, endpoint, adapter}, update) do
-    event = apply(adapter, :event, [update])
-    endpoint.call(event, [])
+    update
+    |> adapter.event()
+    |> endpoint.call([])
 
     {:stop, :shutdown, update}
   end

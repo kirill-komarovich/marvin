@@ -199,7 +199,8 @@ defmodule Marvin.Adapter.TelegramTest do
         message_id: :message_id,
         chat: %{
           id: :chat_id
-        }
+        },
+        from: %Nadia.Model.User{}
       }
     }
 
@@ -228,7 +229,8 @@ defmodule Marvin.Adapter.TelegramTest do
         message_id: :message_id,
         chat: %{
           id: :chat_id
-        }
+        },
+        from: %Nadia.Model.User{}
       }
     }
 
@@ -256,7 +258,8 @@ defmodule Marvin.Adapter.TelegramTest do
         message_id: :message_id,
         chat: %{
           id: :chat_id
-        }
+        },
+        from: %{}
       }
     }
 
@@ -284,7 +287,8 @@ defmodule Marvin.Adapter.TelegramTest do
         message_id: :message_id,
         chat: %{
           id: :chat_id
-        }
+        },
+        from: %Nadia.Model.User{}
       }
     }
 
@@ -315,7 +319,8 @@ defmodule Marvin.Adapter.TelegramTest do
           chat: %{
             id: :chat_id
           }
-        }
+        },
+        from: %Nadia.Model.User{}
       }
     }
 
