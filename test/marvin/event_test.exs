@@ -5,51 +5,42 @@ defmodule Marvin.EventTest do
 
   alias Marvin.Event
 
-  setup do
-    self = self()
-
-    on_exit(fn ->
-      Marvin.Test.EventStore.clear_actions(self)
-    end)
-  end
-
   test "send_message/2 calls send_message adapter function with given text" do
-    event = Event.send_message(event(), "some reply")
+    Event.send_message(event(), "some reply")
 
-    assert sent_message(event) == "some reply"
+    assert sent_message() == "some reply"
   end
 
   test "send_message/3 calls send_message adapter function with given text and opts" do
-    event = Event.send_message(event(), "some reply", reply: true)
+    Event.send_message(event(), "some reply", reply: true)
 
-    sent_message(event, fn message, opts ->
+    sent_message(fn message, opts ->
       assert message == "some reply"
       assert opts == [reply: true]
     end)
   end
 
   test "send_messages/2 calls send_message adapter function for each given message" do
-    event =
-      Event.send_messages(
-        event(),
-        [
-          {"message 1", [reply: true]},
-          {"message 2", []},
-          "message 3"
-        ]
-      )
+    Event.send_messages(
+      event(),
+      [
+        {"message 1", [reply: true]},
+        {"message 2", []},
+        "message 3"
+      ]
+    )
 
-    sent_message(event, fn message, opts ->
+    sent_message(fn message, opts ->
       assert message == "message 1"
       assert opts == [reply: true]
     end)
 
-    sent_message(event, fn message, opts ->
+    sent_message(fn message, opts ->
       assert message == "message 2"
       assert opts == []
     end)
 
-    assert sent_message(event) == "message 3"
+    assert sent_message() == "message 3"
   end
 
   test "register_before_send/2 returns event with added before send callback" do
@@ -98,21 +89,19 @@ defmodule Marvin.EventTest do
   end
 
   test "halt/1 updates halt attribute" do
-    event = %Event{}
-
-    assert %Event{halted: true} = Event.halt(event)
+    assert %Event{halted: true} = Event.halt(%Event{halted: false})
   end
 
   test "edit_message/2 calls edit_message adapter function with given text" do
-    event = Event.edit_message(event(), "some reply")
+    Event.edit_message(event(), "some reply")
 
-    assert edited_message(event) == "some reply"
+    assert edited_message() == "some reply"
   end
 
   test "edit_message/3 calls edit_message adapter function with given text and opts" do
-    event = Event.edit_message(event(), "some reply", markup: "some_markup")
+    Event.edit_message(event(), "some reply", markup: "some_markup")
 
-    edited_message(event, fn message, opts ->
+    edited_message(fn message, opts ->
       assert message == "some reply"
       assert opts == [markup: "some_markup"]
     end)
@@ -137,15 +126,15 @@ defmodule Marvin.EventTest do
   end
 
   test "answer_callback/2 calls answer_callback adapter function with given text" do
-    event = Event.answer_callback(event(), "some reply")
+    Event.answer_callback(event(), "some reply")
 
-    assert answered_callback(event) == "some reply"
+    assert answered_callback() == "some reply"
   end
 
   test "answer_callback/3 calls answer_callback adapter function with given text and opts" do
-    event = Event.answer_callback(event(), "some reply", alert: true)
+    Event.answer_callback(event(), "some reply", alert: true)
 
-    answered_callback(event, fn message, opts ->
+    answered_callback(fn message, opts ->
       assert message == "some reply"
       assert opts == [alert: true]
     end)

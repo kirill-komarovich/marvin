@@ -3,34 +3,6 @@ defmodule Marvin.TelegramTest do
 
   alias Marvin.Telegram
 
-  defmodule FakeNadia do
-    def get_updates(opts) do
-      send(self(), {:get_updates, opts})
-
-      [%Nadia.Model.Update{}]
-    end
-
-    def send_message(chat_id, text, opts) do
-      send(self(), {:send_message, chat_id, text, opts})
-    end
-
-    def edit_message_text(chat_id, message_id, inline_message_id, text, opts) do
-      send(self(), {:edit_message_text, chat_id, message_id, inline_message_id, text, opts})
-    end
-
-    def answer_callback_query(callback_id, opts) do
-      send(self(), {:answer_callback_query, callback_id, opts})
-    end
-  end
-
-  setup do
-    Application.put_env(:marvin, :telegram_adapter, FakeNadia)
-
-    on_exit(fn ->
-      Application.put_env(:marvin, :telegram_adapter, nil)
-    end)
-  end
-
   test "name/0 returns adapter name" do
     assert "Telegram" = Telegram.name()
   end
@@ -40,7 +12,7 @@ defmodule Marvin.TelegramTest do
 
     assert [%Nadia.Model.Update{}] = Telegram.get_updates(offset: offset)
 
-    assert_receive {:get_updates, [offset: ^offset]}
+    assert_receive {:telegram, :get_updates, [offset: ^offset]}
   end
 
   test "send_message/3 sends message by chat_id inside event" do
@@ -49,7 +21,7 @@ defmodule Marvin.TelegramTest do
 
     Telegram.send_message(%Marvin.Event{private: %{chat_id: chat_id}}, text, [])
 
-    assert_receive {:send_message, ^chat_id, ^text, []}
+    assert_receive {:telegram, :send_message, ^chat_id, ^text, []}
   end
 
   test "send_message/3 sends message by chat_id" do
@@ -58,7 +30,7 @@ defmodule Marvin.TelegramTest do
 
     Telegram.send_message(chat_id, text, [])
 
-    assert_receive {:send_message, ^chat_id, ^text, []}
+    assert_receive {:telegram, :send_message, ^chat_id, ^text, []}
   end
 
   test "send_message/3 with reply option sends message by chat_id and message_id inside event" do
@@ -72,7 +44,7 @@ defmodule Marvin.TelegramTest do
       reply: true
     )
 
-    assert_receive {:send_message, ^chat_id, ^text, [reply_to_message_id: ^message_id]}
+    assert_receive {:telegram, :send_message, ^chat_id, ^text, [reply_to_message_id: ^message_id]}
   end
 
   test "send_message/3 with reply option sends message by chat_id and message_id" do
@@ -86,7 +58,7 @@ defmodule Marvin.TelegramTest do
       reply: message_id
     )
 
-    assert_receive {:send_message, ^chat_id, ^text, [reply_to_message_id: ^message_id]}
+    assert_receive {:telegram, :send_message, ^chat_id, ^text, [reply_to_message_id: ^message_id]}
   end
 
   test "send_message/3 with keyboard option sends message with reply markup" do
@@ -97,7 +69,7 @@ defmodule Marvin.TelegramTest do
 
     Telegram.send_message(%Marvin.Event{private: %{chat_id: chat_id}}, text, keyboard: keyboard)
 
-    assert_receive {:send_message, ^chat_id, ^text, [reply_markup: ^markup]}
+    assert_receive {:telegram, :send_message, ^chat_id, ^text, [reply_markup: ^markup]}
   end
 
   test "send_message/3 with unknown option sends message by chat_id" do
@@ -106,7 +78,7 @@ defmodule Marvin.TelegramTest do
 
     Telegram.send_message(%Marvin.Event{private: %{chat_id: chat_id}}, text, unknown: :value)
 
-    assert_receive {:send_message, ^chat_id, ^text, []}
+    assert_receive {:telegram, :send_message, ^chat_id, ^text, []}
   end
 
   test "edit_message/3 edits messages by chat_id and message_id inside event" do
@@ -120,7 +92,7 @@ defmodule Marvin.TelegramTest do
       []
     )
 
-    assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
+    assert_receive {:telegram, :edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
   end
 
   test "edit_message/3 edits messages by chat_id and message_id" do
@@ -130,7 +102,7 @@ defmodule Marvin.TelegramTest do
 
     Telegram.edit_message(chat_id, message_id, nil, text, [])
 
-    assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
+    assert_receive {:telegram, :edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
   end
 
   test "edit_message/3 with keyboard option edits messages by chat_id and message_id with reply markup" do
@@ -146,7 +118,7 @@ defmodule Marvin.TelegramTest do
       keyboard: keyboard
     )
 
-    assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text,
+    assert_receive {:telegram, :edit_message_text, ^chat_id, ^message_id, nil, ^text,
                     [reply_markup: ^markup]}
   end
 
@@ -161,7 +133,7 @@ defmodule Marvin.TelegramTest do
       unknown: :value
     )
 
-    assert_receive {:edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
+    assert_receive {:telegram, :edit_message_text, ^chat_id, ^message_id, nil, ^text, []}
   end
 
   test "answer_callback/3 sends callback answer by callback_id" do
@@ -174,7 +146,8 @@ defmodule Marvin.TelegramTest do
       []
     )
 
-    assert_receive {:answer_callback_query, ^callback_id, [text: ^text, show_alert: false]}
+    assert_receive {:telegram, :answer_callback_query, ^callback_id,
+                    [text: ^text, show_alert: false]}
   end
 
   test "answer_callback/3 with alert option sends callback answer by callback_id as alert" do
@@ -187,7 +160,8 @@ defmodule Marvin.TelegramTest do
       alert: true
     )
 
-    assert_receive {:answer_callback_query, ^callback_id, [text: ^text, show_alert: true]}
+    assert_receive {:telegram, :answer_callback_query, ^callback_id,
+                    [text: ^text, show_alert: true]}
   end
 
   test "event/1 converts Nadia.Update to Marvin.Event" do

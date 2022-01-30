@@ -1,7 +1,7 @@
 defmodule Marvin.Adapter.Test do
   use Marvin.Adapter
 
-  alias Marvin.Test.EventStore
+  alias Marvin.Test.Notifier
 
   @platform :test
 
@@ -35,14 +35,14 @@ defmodule Marvin.Adapter.Test do
   end
 
   def send_message(%Marvin.Event{owner: owner}, text, opts) do
-    EventStore.store_action(owner, {:send_message, text, opts})
+    Notifier.notify(owner, {:send_message, text, opts})
   end
 
   def edit_message(%Marvin.Event{owner: owner}, text, opts) do
-    EventStore.store_action(owner, {:edit_message, text, opts})
+    Notifier.notify(owner, {:edit_message, text, opts})
   end
 
   def answer_callback(%Marvin.Event{owner: owner}, text, opts) do
-    EventStore.store_action(owner, {:answer_callback, text, opts})
+    Notifier.notify(owner, {:answer_callback, text, opts})
   end
 end

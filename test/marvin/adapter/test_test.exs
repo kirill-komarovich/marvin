@@ -51,44 +51,4 @@ defmodule Marvin.Adapter.TestTest do
              raw: %{id: "id", username: "username"}
            } = Test.from(id: "id", username: "username")
   end
-
-  setup do
-    owner = self()
-
-    on_exit(fn ->
-      Marvin.Test.EventStore.clear_actions(owner)
-    end)
-
-    [owner: owner]
-  end
-
-  test "send_message/3 stores send_message action in EventStore", %{owner: owner} do
-    text = "message"
-    opts = []
-
-    Test.send_message(%Event{owner: owner}, text, opts)
-
-    assert {:send_message, ^text, ^opts} = Marvin.Test.EventStore.pop_action(owner)
-    assert :no_action == Marvin.Test.EventStore.pop_action(owner)
-  end
-
-  test "edit_message/3 stores edit_message action in EventStore", %{owner: owner} do
-    text = "message"
-    opts = []
-
-    Test.edit_message(%Event{owner: owner}, text, opts)
-
-    assert {:edit_message, ^text, ^opts} = Marvin.Test.EventStore.pop_action(owner)
-    assert :no_action == Marvin.Test.EventStore.pop_action(owner)
-  end
-
-  test "answer_callback/3 stores answer_callback action in EventStore", %{owner: owner} do
-    text = "message"
-    opts = []
-
-    Test.answer_callback(%Event{owner: owner}, text, opts)
-
-    assert {:answer_callback, ^text, ^opts} = Marvin.Test.EventStore.pop_action(owner)
-    assert :no_action == Marvin.Test.EventStore.pop_action(owner)
-  end
 end

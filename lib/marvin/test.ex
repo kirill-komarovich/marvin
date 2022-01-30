@@ -1,4 +1,6 @@
 defmodule Marvin.Test do
+  import ExUnit.Assertions
+
   def event do
     Marvin.Adapter.Test.event(%Marvin.Event{})
   end
@@ -23,21 +25,32 @@ defmodule Marvin.Test do
     |> endpoint.call(endpoint.init([]))
   end
 
-  def sent_message(%Marvin.Event{owner: owner}, fun \\ nil) do
-    message_action(:send_message, owner, fun)
+  @failure_message "expected a message to be sent, but nothing happened"
+
+  def sent_message(fun \\ nil, timeout \\ 0) do
+    event = assert_receive(_event, timeout, @failure_message)
+
+    message_action(event, :send_message, fun)
   end
 
-  def edited_message(%Marvin.Event{owner: owner}, fun \\ nil) do
-    message_action(:edit_message, owner, fun)
+  @failure_message "expected a message to be edited, but nothing happened"
+
+  def edited_message(fun \\ nil, timeout \\ 0) do
+    event = assert_receive(_event, timeout, @failure_message)
+
+    message_action(event, :edit_message, fun)
   end
 
-  def answered_callback(%Marvin.Event{owner: owner}, fun \\ nil) do
-    message_action(:answer_callback, owner, fun)
+  @failure_message "expected a callback to be answered, but nothing happened"
+
+  def answered_callback(fun \\ nil, timeout \\ 0) do
+    event = assert_receive(_event, timeout, @failure_message)
+
+    message_action(event, :answer_callback, fun)
   end
 
-  # TODO: move Marvin.Test.EventStore to adapter?
-  defp message_action(action_name, owner, fun) do
-    case Marvin.Test.EventStore.pop_action(owner) do
+  defp message_action(event, action_name, fun) do
+    case event do
       {^action_name, message, opts} when is_function(fun, 2) ->
         fun.(message, opts)
 

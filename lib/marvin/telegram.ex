@@ -182,17 +182,21 @@ defmodule Marvin.Telegram do
   end
 
   defp run_command(command, args) do
-    Application.ensure_all_started(:nadia)
-
-    module = Application.get_env(:marvin, :telegram_adapter, Nadia)
-
     # TODO: convert errors to internal Error struct?
-    case apply(module, command, args) do
+    case apply(get_client(), command, args) do
       {:error, error} ->
         raise "Failed to process `#{command}` with #{inspect(args)} arguments.\n\nReason: #{inspect(error)}"
 
       value ->
         value
     end
+  end
+
+  defp get_client do
+    module = Application.get_env(:marvin, :telegram_client, Nadia)
+    otp_app = Application.get_application(module)
+    Application.ensure_all_started(otp_app)
+
+    module
   end
 end

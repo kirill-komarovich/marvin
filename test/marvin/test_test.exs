@@ -51,99 +51,75 @@ defmodule Marvin.TestTest do
   end
 
   test "sent_message/1 returns sent message" do
-    owner = self()
-    Marvin.Test.EventStore.store_action(owner, {:send_message, "message", []})
+    Marvin.Test.Notifier.notify(self(), {:send_message, "message", []})
 
-    Test.sent_message(%Marvin.Event{owner: owner})
+    assert Test.sent_message() == "message"
   end
 
   test "sent_message/1 without sent message raises error" do
     owner = self()
 
     assert_raise RuntimeError, "expected send_message action, got: :unknown_action", fn ->
-      Marvin.Test.EventStore.store_action(owner, :unknown_action)
+      Marvin.Test.Notifier.notify(owner, :unknown_action)
 
-      Test.sent_message(%Marvin.Event{owner: owner})
-    end
-  end
-
-  test "sent_message/1 when no actions stored raises error" do
-    assert_raise RuntimeError, "expected send_message action, got: :no_action", fn ->
-      Test.sent_message(%Marvin.Event{owner: self()})
+      Test.sent_message()
     end
   end
 
   test "sent_message/2 passes sent message and opts in given callback" do
-    owner = self()
-    Marvin.Test.EventStore.store_action(owner, {:send_message, "message", [reply: true]})
+    Marvin.Test.Notifier.notify(self(), {:send_message, "message", [reply: true]})
 
-    Test.sent_message(%Marvin.Event{owner: owner}, fn message, opts ->
+    Test.sent_message(fn message, opts ->
       assert message == "message"
       assert opts == [reply: true]
     end)
   end
 
   test "edited_message/1 returns edited message" do
-    owner = self()
-    Marvin.Test.EventStore.store_action(owner, {:edit_message, "message", []})
+    Marvin.Test.Notifier.notify(self(), {:edit_message, "message", []})
 
-    Test.edited_message(%Marvin.Event{owner: owner})
+    assert Test.edited_message() == "message"
   end
 
   test "edited_message/1 without edited message raises error" do
     owner = self()
 
     assert_raise RuntimeError, "expected edit_message action, got: :unknown_action", fn ->
-      Marvin.Test.EventStore.store_action(owner, :unknown_action)
+      Marvin.Test.Notifier.notify(owner, :unknown_action)
 
-      Test.edited_message(%Marvin.Event{owner: owner})
-    end
-  end
-
-  test "edited_message/1 when no actions stored raises error" do
-    assert_raise RuntimeError, "expected edit_message action, got: :no_action", fn ->
-      Test.edited_message(%Marvin.Event{owner: self()})
+      Test.edited_message()
     end
   end
 
   test "edited_message/2 passes edited message and opts in given callback" do
-    owner = self()
-    Marvin.Test.EventStore.store_action(owner, {:edit_message, "message", [reply: true]})
+    Marvin.Test.Notifier.notify(self(), {:edit_message, "message", [reply: true]})
 
-    Test.edited_message(%Marvin.Event{owner: owner}, fn message, opts ->
+    Test.edited_message(fn message, opts ->
       assert message == "message"
       assert opts == [reply: true]
     end)
   end
 
   test "answered_callback/1 returns answered message" do
-    owner = self()
-    Marvin.Test.EventStore.store_action(owner, {:answer_callback, "message", []})
+    Marvin.Test.Notifier.notify(self(), {:answer_callback, "message", []})
 
-    Test.answered_callback(%Marvin.Event{owner: owner})
+    assert Test.answered_callback() == "message"
   end
 
   test "answered_callback/1 without answered message raises error" do
     owner = self()
 
     assert_raise RuntimeError, "expected answer_callback action, got: :unknown_action", fn ->
-      Marvin.Test.EventStore.store_action(owner, :unknown_action)
+      Marvin.Test.Notifier.notify(owner, :unknown_action)
 
-      Test.answered_callback(%Marvin.Event{owner: owner})
-    end
-  end
-
-  test "answered_callback/1 when no actions stored raises error" do
-    assert_raise RuntimeError, "expected answer_callback action, got: :no_action", fn ->
-      Test.answered_callback(%Marvin.Event{owner: self()})
+      Test.answered_callback()
     end
   end
 
   test "answered_callback/2 passes answered message and opts in given callback" do
-    owner = self()
-    Marvin.Test.EventStore.store_action(owner, {:answer_callback, "message", [reply: true]})
+    Marvin.Test.Notifier.notify(self(), {:answer_callback, "message", [reply: true]})
 
-    Test.answered_callback(%Marvin.Event{owner: owner}, fn message, opts ->
+    Test.answered_callback(fn message, opts ->
       assert message == "message"
       assert opts == [reply: true]
     end)
