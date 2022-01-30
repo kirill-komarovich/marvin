@@ -1,7 +1,7 @@
-defmodule Marvin.Adapter.TelegramTest do
+defmodule Marvin.TelegramTest do
   use ExUnit.Case, async: true
 
-  alias Marvin.Adapter.Telegram
+  alias Marvin.Telegram
 
   defmodule FakeNadia do
     def get_updates(opts) do

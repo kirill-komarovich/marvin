@@ -1,7 +1,7 @@
-defmodule Marvin.Adapter.Telegram.KeyboardTest do
+defmodule Marvin.Telegram.KeyboardTest do
   use ExUnit.Case, async: true
 
-  alias Marvin.Adapter.Telegram.Keyboard
+  alias Marvin.Telegram.Keyboard
   alias Nadia.Model.{InlineKeyboardButton, InlineKeyboardMarkup}
 
   test "to_markup/1 converts marvin keyboard to nadia keyboard" do

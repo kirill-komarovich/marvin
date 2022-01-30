@@ -1,4 +1,4 @@
-defmodule Marvin.Adapter.Telegram do
+defmodule Marvin.Telegram do
   @moduledoc """
   Adapter for Nadia Telegram API wrapper
   """
@@ -42,7 +42,7 @@ defmodule Marvin.Adapter.Telegram do
         Keyword.put(acc, :reply_to_message_id, message_id)
 
       {:keyboard, keyboard}, acc ->
-        Keyword.put(acc, :reply_markup, Marvin.Adapter.Telegram.Keyboard.to_markup(keyboard))
+        Keyword.put(acc, :reply_markup, Marvin.Telegram.Keyboard.to_markup(keyboard))
 
       _, acc ->
         acc
@@ -73,7 +73,7 @@ defmodule Marvin.Adapter.Telegram do
   defp edit_options(opts) do
     Enum.reduce(opts, [], fn
       {:keyboard, keyboard}, acc ->
-        Keyword.put(acc, :reply_markup, Marvin.Adapter.Telegram.Keyboard.to_markup(keyboard))
+        Keyword.put(acc, :reply_markup, Marvin.Telegram.Keyboard.to_markup(keyboard))
 
       _, acc ->
         acc

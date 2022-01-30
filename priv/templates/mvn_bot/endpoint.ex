@@ -1,7 +1,7 @@
 defmodule <%= @bot_namespace %>.Endpoint do
   use Marvin.Endpoint
 <%= if @telegram do %>
-  poller Marvin.Poller.Telegram
+  poller Marvin.Telegram.Poller
 <% end %>
   plug Marvin.Pipeline.Logger
 

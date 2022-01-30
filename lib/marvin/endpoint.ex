@@ -66,7 +66,7 @@ defmodule Marvin.Endpoint do
     defmodule MyAppBot.Endpoint do
       use Marvin.Endpoint
 
-      poller Marvin.Poller.Telegram
+      poller Marvin.Telegram.Poller
     end
   """
   defmacro poller(mod, opts \\ []) do

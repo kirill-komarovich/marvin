@@ -107,7 +107,7 @@ defmodule Mix.Tasks.Mvn.NewTest do
 
       assert_file(
         "#{@app_name}/lib/#{@app_name}_bot/endpoint.ex",
-        "poller Marvin.Poller.Telegram"
+        "poller Marvin.Telegram.Poller"
       )
 
       assert_file("#{@app_name}/config/config.exs", "config :nadia, token: \"your-bot-token\"")

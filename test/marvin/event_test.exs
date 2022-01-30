@@ -1,69 +1,55 @@
 defmodule Marvin.EventTest do
   use ExUnit.Case, async: true
 
+  import Marvin.Test
+
   alias Marvin.Event
 
-  defmodule TestAdapter do
-    def send_message(event, text, opts) do
-      send(self(), [event, text, opts])
-    end
+  setup do
+    self = self()
 
-    def edit_message(event, text, opts) do
-      send(self(), [event, text, opts])
-    end
-
-    def answer_callback(event, text, opts) do
-      send(self(), [event, text, opts])
-    end
-
-    def from(%{from: from}) do
-      raw = from
-      from = from
-
-      %Marvin.Event.From{
-        id: from[:id],
-        username: from[:username],
-        raw: raw
-      }
-    end
+    on_exit(fn ->
+      Marvin.Test.EventStore.clear_actions(self)
+    end)
   end
 
   test "send_message/2 calls send_message adapter function with given text" do
-    event = %Event{adapter: TestAdapter}
-    text = "some reply"
-    Event.send_message(event, text)
+    event = Event.send_message(event(), "some reply")
 
-    assert_receive [^event, ^text, []]
+    assert sent_message(event) == "some reply"
   end
 
   test "send_message/3 calls send_message adapter function with given text and opts" do
-    event = %Event{adapter: TestAdapter}
-    text = "some reply"
-    opts = [reply: true]
+    event = Event.send_message(event(), "some reply", reply: true)
 
-    Event.send_message(event, text, opts)
-
-    assert_receive [^event, ^text, ^opts]
+    sent_message(event, fn message, opts ->
+      assert message == "some reply"
+      assert opts == [reply: true]
+    end)
   end
 
   test "send_messages/2 calls send_message adapter function for each given message" do
-    event = %Event{adapter: TestAdapter}
+    event =
+      Event.send_messages(
+        event(),
+        [
+          {"message 1", [reply: true]},
+          {"message 2", []},
+          "message 3"
+        ]
+      )
 
-    messages = [
-      {"message 1", [reply: true]},
-      {"message 2", []},
-      "message 3"
-    ]
-
-    Event.send_messages(event, messages)
-
-    Enum.each(messages, fn
-      {text, opts} ->
-        assert_receive [^event, ^text, ^opts]
-
-      text when is_binary(text) ->
-        assert_receive [^event, ^text, []]
+    sent_message(event, fn message, opts ->
+      assert message == "message 1"
+      assert opts == [reply: true]
     end)
+
+    sent_message(event, fn message, opts ->
+      assert message == "message 2"
+      assert opts == []
+    end)
+
+    assert sent_message(event) == "message 3"
   end
 
   test "register_before_send/2 returns event with added before send callback" do
@@ -118,25 +104,23 @@ defmodule Marvin.EventTest do
   end
 
   test "edit_message/2 calls edit_message adapter function with given text" do
-    event = %Event{adapter: TestAdapter}
-    text = "some reply"
-    Event.edit_message(event, text)
+    event = Event.edit_message(event(), "some reply")
 
-    assert_receive [^event, ^text, []]
+    assert edited_message(event) == "some reply"
   end
 
   test "edit_message/3 calls edit_message adapter function with given text and opts" do
-    event = %Event{adapter: TestAdapter}
-    text = "some reply"
-    opts = [markup: "some_markup"]
-    Event.edit_message(event, text, opts)
+    event = Event.edit_message(event(), "some reply", markup: "some_markup")
 
-    assert_receive [^event, ^text, ^opts]
+    edited_message(event, fn message, opts ->
+      assert message == "some reply"
+      assert opts == [markup: "some_markup"]
+    end)
   end
 
   test "put_from/1 sets event sender to from assigns key" do
     from = %{id: 1, username: "name"}
-    event = %Event{adapter: TestAdapter, raw_event: %{from: from}}
+    event = %{event() | raw_event: from}
 
     assert %Marvin.Event{
              assigns: %{
@@ -153,21 +137,17 @@ defmodule Marvin.EventTest do
   end
 
   test "answer_callback/2 calls answer_callback adapter function with given text" do
-    event = %Event{adapter: TestAdapter}
-    text = "some reply"
+    event = Event.answer_callback(event(), "some reply")
 
-    Event.answer_callback(event, text)
-
-    assert_receive [^event, ^text, []]
+    assert answered_callback(event) == "some reply"
   end
 
   test "answer_callback/3 calls answer_callback adapter function with given text and opts" do
-    event = %Event{adapter: TestAdapter}
-    text = "some reply"
-    opts = [alert: true]
+    event = Event.answer_callback(event(), "some reply", alert: true)
 
-    Event.answer_callback(event, text, opts)
-
-    assert_receive [^event, ^text, ^opts]
+    answered_callback(event, fn message, opts ->
+      assert message == "some reply"
+      assert opts == [alert: true]
+    end)
   end
 end

@@ -1,4 +1,4 @@
-defmodule Marvin.Adapter.Telegram.Keyboard do
+defmodule Marvin.Telegram.Keyboard do
   alias Marvin.Event
   alias Nadia.Model.{InlineKeyboardButton, InlineKeyboardMarkup}
 

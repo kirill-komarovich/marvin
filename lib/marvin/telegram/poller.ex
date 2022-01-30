@@ -1,5 +1,5 @@
-defmodule Marvin.Poller.Telegram do
-  use Marvin.Poller, adapter: Marvin.Adapter.Telegram
+defmodule Marvin.Telegram.Poller do
+  use Marvin.Poller, adapter: Marvin.Telegram
 
   def update_state(state, []), do: state
 
