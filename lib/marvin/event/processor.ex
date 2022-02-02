@@ -17,11 +17,45 @@ defmodule Marvin.Event.Processor do
     GenServer.cast(pid, {:process, endpoint, adapter})
   end
 
-  def handle_cast({:process, endpoint, adapter}, update) do
-    update
-    |> adapter.event()
-    |> endpoint.call([])
+  @event_prefix [:marvin, :update]
 
-    {:stop, :shutdown, update}
+  def handle_cast({:process, endpoint, adapter}, update) do
+    start_time = System.monotonic_time()
+
+    :telemetry.execute(@event_prefix ++ [:start], %{system_time: System.system_time()}, %{
+      endpoint: endpoint,
+      adapter: adapter,
+      update: update
+    })
+
+    try do
+      update
+      |> adapter.event()
+      |> endpoint.call([])
+
+      duration = System.monotonic_time() - start_time
+
+      :telemetry.execute(@event_prefix ++ [:stop], %{duration: duration}, %{
+        endpoint: endpoint,
+        adapter: adapter,
+        update: update
+      })
+
+      {:stop, :shutdown, update}
+    rescue
+      e ->
+        duration = System.monotonic_time() - start_time
+
+        :telemetry.execute(@event_prefix ++ [:exception], %{duration: duration}, %{
+          endpoint: endpoint,
+          adapter: adapter,
+          update: update,
+          kind: :exit,
+          reason: e,
+          stacktrace: __STACKTRACE__
+        })
+
+        reraise e, __STACKTRACE__
+    end
   end
 end

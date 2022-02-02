@@ -35,14 +35,16 @@ defmodule Marvin.MatcherTest do
   test "call/2 when triggers regex pattern" do
     event = %Event{text: "test_regex"}
 
-    assert {RegexHandler, ^event} = Matcher.call(event, [])
+    assert {RegexHandler, new_event} = Matcher.call(event, [])
+    assert new_event == %{event | private: %{marvin_matcher: Matcher}}
   end
 
   @tag capture_log: true
   test "call/2 when triggers string pattern" do
     event = %Event{text: "test_string"}
 
-    assert {StringHandler, ^event} = Matcher.call(event, [])
+    assert {StringHandler, new_event} = Matcher.call(event, [])
+    assert new_event == %{event | private: %{marvin_matcher: Matcher}}
   end
 
   test "call/2 when no handler found" do
@@ -80,6 +82,8 @@ defmodule Marvin.MatcherTest do
 
     assert_receive {:telemetry_event, [:marvin, :matcher, :stop], %{duration: _},
                     %{event: ^event}}
+
+    event = %{event | private: %{marvin_matcher: Matcher}}
 
     assert_receive {:telemetry_event, [:marvin, :matcher_dispatch, :start], %{system_time: _},
                     %{event: ^event}}

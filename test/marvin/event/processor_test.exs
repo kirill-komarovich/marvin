@@ -9,6 +9,12 @@ defmodule Marvin.Event.ProcessorTest do
     end
   end
 
+  defmodule FailureEndpoint do
+    def call(_, _opts) do
+      raise "Error"
+    end
+  end
+
   defmodule Adapter do
     def event(%{target: target, data: data}) do
       send(target, {:adapter, :data, data})
@@ -65,5 +71,54 @@ defmodule Marvin.Event.ProcessorTest do
     assert_receive {:trace, ^pid, :receive,
                     {:"$gen_call", _,
                      {:start_child, {{Processor, :start_link, [^second_update]}, _, _, _, _}}}}
+  end
+
+  @tag capture_log: true
+  test "telemetry", %{test: test} do
+    self = self()
+
+    update = %{target: self, data: :data}
+
+    :ok =
+      :telemetry.attach_many(
+        "#{test}",
+        [
+          [:marvin, :update, :start],
+          [:marvin, :update, :stop],
+          [:marvin, :update, :exception]
+        ],
+        fn name, measurements, metadata, _ ->
+          send(self, {:telemetry_event, name, measurements, metadata})
+        end,
+        nil
+      )
+
+    {:ok, pid} = start_supervised({Processor, update})
+    GenServer.cast(pid, {:process, Endpoint, Adapter})
+
+    assert_receive {:telemetry_event, [:marvin, :update, :start], %{system_time: _},
+                    %{endpoint: Endpoint, adapter: Adapter, update: ^update}}
+
+    assert_receive {:telemetry_event, [:marvin, :update, :stop], %{duration: _},
+                    %{endpoint: Endpoint, adapter: Adapter, update: ^update}}
+
+    {:ok, pid} = start_supervised({Processor, update})
+
+    GenServer.cast(pid, {:process, FailureEndpoint, Adapter})
+
+    assert_receive {:telemetry_event, [:marvin, :update, :exception], %{duration: _},
+                    %{
+                      endpoint: FailureEndpoint,
+                      adapter: Adapter,
+                      update: ^update,
+                      reason: reason,
+                      stacktrace: stacktrace
+                    }}
+
+    assert %{__exception__: true, message: "Error"} = reason
+
+    assert [{Marvin.Event.ProcessorTest.FailureEndpoint, :call, 2, _path} | _] = stacktrace
+
+    :telemetry.detach("#{test}")
   end
 end

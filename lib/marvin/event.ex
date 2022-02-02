@@ -124,9 +124,9 @@ defmodule Marvin.Event do
   @doc """
   Adds callback function that accepts and returns event
 
-  ## Example:
+  ## Examples
 
-    #{__MODULE__}.register_before_send(event, fn event ->
+    iex> register_before_send(event, fn event ->
       IO.puts event.text
       event
     end)
@@ -218,6 +218,7 @@ defmodule Marvin.Event do
   Equivalent to multiple `put_private/3` calls.
 
   ## Examples
+
       iex> event.private[:private_key]
       nil
       iex> event = merge_private(event, private_key: :value)
@@ -232,7 +233,7 @@ defmodule Marvin.Event do
 
   @doc """
   Marks event as halted
-  ## Examples:
+  ## Examples
 
     iex> event.halted
     false
@@ -248,7 +249,7 @@ defmodule Marvin.Event do
 
   @doc """
   Puts sender to event assigns as %Marvin.Event.From{} under :from key
-  ## Examples:
+  ## Examples
 
     iex> put_from(event)
     iex> event,assigns[:from]

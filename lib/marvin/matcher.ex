@@ -45,8 +45,13 @@ defmodule Marvin.Matcher do
     quote location: :keep do
       def call(event, opts) do
         case match_handler(super(event, opts)) do
-          {handler, event} -> Marvin.Matcher.__call__(event, handler)
-          :error -> raise NoHandlerError, event: event
+          {handler, event} ->
+            event
+            |> Marvin.Event.put_private(:marvin_matcher, __MODULE__)
+            |> Marvin.Matcher.__call__(handler)
+
+          :error ->
+            raise NoHandlerError, event: event
         end
       end
     end
@@ -85,7 +90,6 @@ defmodule Marvin.Matcher do
       %{event: event, handler: handler}
     )
 
-    # TODO: handle exceptions
     handler.call(event, event.params)
   end
 
