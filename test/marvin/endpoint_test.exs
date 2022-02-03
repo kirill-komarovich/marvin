@@ -4,7 +4,9 @@ defmodule Marvin.EndpointTest do
   doctest Marvin.Endpoint
 
   defmodule Endpoint do
-    use Marvin.Endpoint
+    use Marvin.Endpoint, otp_app: :test_app
+
+    assert @otp_app == :test_app
 
     poller TestPoller
     poller TestPollerWithOpts, some: "opt"

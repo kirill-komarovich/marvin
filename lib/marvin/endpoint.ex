@@ -5,7 +5,7 @@ defmodule Marvin.Endpoint do
   @callback start_link() :: Supervisor.on_start()
 
   @doc false
-  defmacro __using__(_) do
+  defmacro __using__(opts) do
     quote do
       require Logger
       import Marvin.Endpoint
@@ -14,13 +14,15 @@ defmodule Marvin.Endpoint do
 
       @before_compile Marvin.Endpoint
 
-      unquote(config())
+      unquote(config(opts))
       unquote(server())
     end
   end
 
-  defp config() do
+  defp config(opts) do
     quote do
+      @otp_app unquote(opts)[:otp_app] || raise("endpoint expects :otp_app to be given")
+
       Module.register_attribute(__MODULE__, :marvin_pollers, accumulate: true)
 
       use Marvin.Pipeline.Builder
@@ -44,8 +46,8 @@ defmodule Marvin.Endpoint do
       @doc """
       Starts the endpoint supervision tree.
       """
-      def start_link(opts \\ []) do
-        Marvin.Endpoint.Supervisor.start_link(__MODULE__)
+      def start_link(_opts \\ []) do
+        Marvin.Endpoint.Supervisor.start_link(@otp_app, __MODULE__)
       end
     end
   end
@@ -64,7 +66,7 @@ defmodule Marvin.Endpoint do
   ## Examples
 
     defmodule MyAppBot.Endpoint do
-      use Marvin.Endpoint
+      use Marvin.Endpoint, otp_app: :my_app
 
       poller Marvin.Telegram.Poller
     end

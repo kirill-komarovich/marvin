@@ -1,5 +1,5 @@
 defmodule <%= @bot_namespace %>.Endpoint do
-  use Marvin.Endpoint
+  use Marvin.Endpoint, otp_app: :<%= @app_name %>
 <%= if @telegram do %>
   poller Marvin.Telegram.Poller
 <% end %>
