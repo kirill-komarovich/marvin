@@ -22,10 +22,18 @@ defmodule Marvin.PollerTest do
   end
 
   defmodule TestPoller do
-    use Marvin.Poller, adapter: Adapter, timeout: 10
+    use Marvin.Poller, otp_app: :test_app, adapter: Adapter
 
     assert @adapter == Adapter
-    assert @timeout == 10
+    assert @otp_app == :test_app
+  end
+
+  setup_all do
+    Application.put_env(:test_app, TestPoller, timeout: 10)
+
+    on_exit(fn ->
+      Application.delete_env(:test_app, TestPoller)
+    end)
   end
 
   @tag capture_log: true

@@ -16,18 +16,16 @@ defmodule Marvin.Poller do
   @doc false
   def config(opts) do
     quote do
-      require Logger
-
       use GenServer
 
       opts = unquote(opts)
 
+      @otp_app opts[:otp_app] || raise("poller expects :otp_app to be given")
       @adapter opts[:adapter] || raise("poller expects :adapter to be given")
-      @timeout opts[:timeout] || 1000
 
       @doc false
       def start_link(endpoint, opts \\ []) do
-        GenServer.start_link(__MODULE__, {endpoint, opts}, name: @adapter)
+        GenServer.start_link(__MODULE__, {endpoint, opts}, name: __MODULE__)
       end
 
       @doc false
@@ -39,8 +37,7 @@ defmodule Marvin.Poller do
           %{adapter: @adapter}
         )
 
-        # TODO: Process.send_after
-        :timer.send_interval(@timeout, :poll)
+        schedule_poll()
 
         {:ok, %{endpoint: endpoint}}
       end
@@ -59,7 +56,11 @@ defmodule Marvin.Poller do
 
       @impl true
       def handle_info(:poll, state) do
-        Marvin.Poller.poll(@adapter, state, &update_state/2)
+        result = Marvin.Poller.poll(@adapter, state, &update_state/2)
+
+        schedule_poll()
+
+        result
       end
 
       @doc ~S"""
@@ -69,11 +70,19 @@ defmodule Marvin.Poller do
       def update_state(state, _updates), do: state
 
       defoverridable update_state: 2
+
+      defp schedule_poll do
+        Marvin.Poller.schedule_poll(self(), timeout())
+      end
+
+      defp timeout do
+        Marvin.Poller.timeout(@otp_app, __MODULE__)
+      end
     end
   end
 
   @doc """
-
+  Polls for updates and sends them to event processor
   """
   @spec poll(atom(), map(), (map(), [term()] -> map())) :: {:noreply, map()}
   def poll(adapter, %{endpoint: endpoint} = state, state_updater) do
@@ -103,6 +112,35 @@ defmodule Marvin.Poller do
     )
 
     # TODO: raise exception?
+  end
+
+  @doc """
+  Schedules poll for given pid
+  """
+  @spec schedule_poll(atom() | pid(), non_neg_integer()) :: reference()
+  def schedule_poll(pid, timeout) do
+    Process.send_after(pid, :poll, timeout)
+  end
+
+  @default_timeout 1000
+
+  @doc """
+  Returns configured timeout for current adapter
+
+  ## Examples
+
+    config.exs:
+      ...
+      config :your_app, YourPoller, timeout: 100
+
+    iex> Marvin.Poller.timeout(:your_app, YourPoller)
+    100
+  """
+  @spec timeout(atom(), atom()) :: non_neg_integer()
+  def timeout(otp_app, poller_mod) do
+    otp_app
+    |> Application.get_env(poller_mod, [])
+    |> Keyword.get(:timeout, @default_timeout)
   end
 
   @doc false
