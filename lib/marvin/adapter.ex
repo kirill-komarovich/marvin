@@ -4,11 +4,14 @@ defmodule Marvin.Adapter do
     quote do
       @behaviour Marvin.Adapter
 
-      @name unquote(opts[:name]) || __MODULE__
+      @module_name __MODULE__ |> to_string() |> String.split(".") |> List.last()
 
-      def name do
-        @name |> to_string() |> String.split(".") |> List.last() |> String.capitalize()
-      end
+      @name String.capitalize(unquote(opts[:name]) || @module_name)
+      @platform unquote(opts[:platform]) || Macro.underscore(@module_name) |> String.to_atom()
+
+      def name, do: @name
+
+      def platform, do: @platform
     end
   end
 
