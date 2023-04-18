@@ -1,6 +1,6 @@
 defmodule Marvin.Telegram.Keyboard do
   alias Marvin.Event
-  alias Nadia.Model.{InlineKeyboardButton, InlineKeyboardMarkup}
+  alias ExGram.Model.{InlineKeyboardButton, InlineKeyboardMarkup}
 
   def to_markup(%Event.Keyboard{type: :inline, rows: rows}) do
     %InlineKeyboardMarkup{inline_keyboard: build_inline_markup(rows)}

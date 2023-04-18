@@ -1,6 +1,6 @@
 import Config
 <%= if @telegram do %>
-config :nadia, token: "your-bot-token"
+config :ex_gram, token: "your-bot-token"
 <% end %>
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

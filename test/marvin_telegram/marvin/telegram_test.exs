@@ -10,7 +10,7 @@ defmodule Marvin.TelegramTest do
   test "get_updates/1 returns list of updates" do
     offset = 1
 
-    assert [%Nadia.Model.Update{}] = Telegram.get_updates(offset: offset)
+    assert [%ExGram.Model.Update{}] = Telegram.get_updates(offset: offset)
 
     assert_receive {:telegram, :get_updates, [offset: ^offset]}
   end
@@ -65,7 +65,7 @@ defmodule Marvin.TelegramTest do
     chat_id = :chat_id
     text = "message"
     keyboard = %Marvin.Event.Keyboard{type: :inline}
-    markup = %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: [[]]}
+    markup = %ExGram.Model.InlineKeyboardMarkup{inline_keyboard: [[]]}
 
     Telegram.send_message(%Marvin.Event{private: %{chat_id: chat_id}}, text, keyboard: keyboard)
 
@@ -110,7 +110,7 @@ defmodule Marvin.TelegramTest do
     message_id = :message_id
     text = "message"
     keyboard = %Marvin.Event.Keyboard{type: :inline}
-    markup = %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: [[]]}
+    markup = %ExGram.Model.InlineKeyboardMarkup{inline_keyboard: [[]]}
 
     Telegram.edit_message(
       %Marvin.Event{private: %{chat_id: chat_id, message_id: message_id}},
@@ -164,17 +164,17 @@ defmodule Marvin.TelegramTest do
                     [text: ^text, show_alert: true]}
   end
 
-  test "event/1 converts Nadia.Update to Marvin.Event" do
-    update = %Nadia.Model.Update{
+  test "event/1 converts ExGram.Model.Update to Marvin.Event" do
+    update = %ExGram.Model.Update{
       update_id: :update_id,
-      message: %Nadia.Model.Message{
+      message: %ExGram.Model.Message{
         text: "text",
         entities: nil,
         message_id: :message_id,
         chat: %{
           id: :chat_id
         },
-        from: %Nadia.Model.User{}
+        from: %ExGram.Model.User{}
       }
     }
 
@@ -193,18 +193,18 @@ defmodule Marvin.TelegramTest do
            } = Telegram.event(update)
   end
 
-  test "event/1 with sticker converts Nadia.Update to Marvin.Event" do
-    update = %Nadia.Model.Update{
+  test "event/1 with sticker converts ExGram.Model.Update to Marvin.Event" do
+    update = %ExGram.Model.Update{
       update_id: :update_id,
-      message: %Nadia.Model.Message{
+      message: %ExGram.Model.Message{
         text: nil,
-        sticker: %Nadia.Model.Sticker{emoji: "👍"},
+        sticker: %ExGram.Model.Sticker{emoji: "👍"},
         entities: nil,
         message_id: :message_id,
         chat: %{
           id: :chat_id
         },
-        from: %Nadia.Model.User{}
+        from: %ExGram.Model.User{}
       }
     }
 
@@ -223,8 +223,8 @@ defmodule Marvin.TelegramTest do
            } = Telegram.event(update)
   end
 
-  test "event/1 with edited message converts Nadia.Update to Marvin.Event" do
-    update = %Nadia.Model.Update{
+  test "event/1 with edited message converts ExGram.Model.Update to Marvin.Event" do
+    update = %ExGram.Model.Update{
       update_id: :update_id,
       edited_message: %{
         text: "text",
@@ -252,17 +252,17 @@ defmodule Marvin.TelegramTest do
            } = Telegram.event(update)
   end
 
-  test "event/1 with command converts Nadia.Update to Marvin.Event" do
-    update = %Nadia.Model.Update{
+  test "event/1 with command converts ExGram.Model.Update to Marvin.Event" do
+    update = %ExGram.Model.Update{
       update_id: :update_id,
-      message: %Nadia.Model.Message{
+      message: %ExGram.Model.Message{
         text: "text",
         entities: [%{type: "bot_command"}],
         message_id: :message_id,
         chat: %{
           id: :chat_id
         },
-        from: %Nadia.Model.User{}
+        from: %ExGram.Model.User{}
       }
     }
 
@@ -281,12 +281,12 @@ defmodule Marvin.TelegramTest do
            } = Telegram.event(update)
   end
 
-  test "event/1 with callback_query Nadia.Update to Marvin.Event" do
-    update = %Nadia.Model.Update{
+  test "event/1 with callback_query ExGram.Model.Update to Marvin.Event" do
+    update = %ExGram.Model.Update{
       update_id: :update_id,
-      callback_query: %Nadia.Model.CallbackQuery{
+      callback_query: %ExGram.Model.CallbackQuery{
         data: "some_data",
-        message: %Nadia.Model.Message{
+        message: %ExGram.Model.Message{
           text: "",
           entities: nil,
           message_id: :message_id,
@@ -294,7 +294,7 @@ defmodule Marvin.TelegramTest do
             id: :chat_id
           }
         },
-        from: %Nadia.Model.User{}
+        from: %ExGram.Model.User{}
       }
     }
 
@@ -314,16 +314,16 @@ defmodule Marvin.TelegramTest do
   end
 
   test "from/1 extracts sender and converts it to marvin structure" do
-    from = %Nadia.Model.User{
+    from = %ExGram.Model.User{
       id: 1,
       first_name: "f_name",
       last_name: "l_name",
       username: "u_name"
     }
 
-    update = %Nadia.Model.Update{
+    update = %ExGram.Model.Update{
       update_id: :update_id,
-      message: %Nadia.Model.Message{
+      message: %ExGram.Model.Message{
         from: from
       }
     }
@@ -343,16 +343,16 @@ defmodule Marvin.TelegramTest do
   end
 
   test "from/1 with callback_query extracts sender and converts it to marvin structure" do
-    from = %Nadia.Model.User{
+    from = %ExGram.Model.User{
       id: 1,
       first_name: "f_name",
       last_name: "l_name",
       username: "u_name"
     }
 
-    update = %Nadia.Model.Update{
+    update = %ExGram.Model.Update{
       update_id: :update_id,
-      callback_query: %Nadia.Model.CallbackQuery{
+      callback_query: %ExGram.Model.CallbackQuery{
         from: from
       }
     }

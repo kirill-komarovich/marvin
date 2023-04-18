@@ -1,10 +1,9 @@
-FROM elixir:1.12.3-alpine
+FROM hexpm/elixir:1.14.4-erlang-25.3-alpine-3.17.2
 
 ARG MIX_ENV
 ARG MIX_HOME=/root/.mix
 
 ENV APP_ROOT=/marvin/
-ENV DEBIAN_FRONTEND=noninteractive
 ENV MIX_HOME=${MIX_HOME}
 
 RUN if [ "$MIX_ENV" != "" ] ; then export MIX_ENV=${MIX_ENV} ; fi

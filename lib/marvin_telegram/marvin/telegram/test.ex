@@ -6,7 +6,7 @@ defmodule Marvin.Telegram.Test do
   def get_updates(opts) do
     Notifier.notify_callers({@platform, :get_updates, opts})
 
-    [%Nadia.Model.Update{}]
+    [%ExGram.Model.Update{}]
   end
 
   def send_message(chat_id, text, opts) do

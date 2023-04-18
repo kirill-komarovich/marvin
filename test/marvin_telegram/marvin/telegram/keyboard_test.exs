@@ -2,9 +2,9 @@ defmodule Marvin.Telegram.KeyboardTest do
   use ExUnit.Case, async: true
 
   alias Marvin.Telegram.Keyboard
-  alias Nadia.Model.{InlineKeyboardButton, InlineKeyboardMarkup}
+  alias ExGram.Model.{InlineKeyboardButton, InlineKeyboardMarkup}
 
-  test "to_markup/1 converts marvin keyboard to nadia keyboard" do
+  test "to_markup/1 converts marvin keyboard to ex_gram keyboard" do
     button = %Marvin.Event.Keyboard.InlineButton{
       text: "text",
       callback_data: "callback_data",
