@@ -1,17 +1,17 @@
-defmodule Marvin.Adapter.TestTest do
+defmodule Marvin.Test.AdapterTest do
   use ExUnit.Case, async: true
 
   alias Marvin.Event
-  alias Marvin.Adapter.Test
+  alias Marvin.Test.Adapter
 
   test "name/0 returns adapter name" do
-    assert "Test" = Test.name()
+    assert "Test" = Adapter.name()
   end
 
   test "event/1 returns test event" do
-    event = Test.event(%Event{})
+    event = Adapter.event(%Event{})
 
-    assert event.adapter == Test
+    assert event.adapter == Adapter
     assert event.owner == self()
     assert event.platform == :test
     assert event.text == ""
@@ -19,9 +19,9 @@ defmodule Marvin.Adapter.TestTest do
   end
 
   test "event/2 with message returns test event" do
-    event = Test.event(%Event{}, "message")
+    event = Adapter.event(%Event{}, "message")
 
-    assert event.adapter == Test
+    assert event.adapter == Adapter
     assert event.owner == self()
     assert event.platform == :test
     assert event.text == "message"
@@ -29,9 +29,9 @@ defmodule Marvin.Adapter.TestTest do
   end
 
   test "event/3 with message and sender returns test event" do
-    event = Test.event(%Event{}, "message", %{})
+    event = Adapter.event(%Event{}, "message", %{})
 
-    assert event.adapter == Test
+    assert event.adapter == Adapter
     assert event.owner == self()
     assert event.platform == :test
     assert event.text == "message"
@@ -41,7 +41,7 @@ defmodule Marvin.Adapter.TestTest do
   test "from/1 when attrs is map returns test sender" do
     attrs = %{id: "id", username: "username"}
 
-    assert %Marvin.Event.From{id: "id", username: "username", raw: ^attrs} = Test.from(attrs)
+    assert %Marvin.Event.From{id: "id", username: "username", raw: ^attrs} = Adapter.from(attrs)
   end
 
   test "from/1 when attrs is list returns test sender" do
@@ -49,6 +49,6 @@ defmodule Marvin.Adapter.TestTest do
              id: "id",
              username: "username",
              raw: %{id: "id", username: "username"}
-           } = Test.from(id: "id", username: "username")
+           } = Adapter.from(id: "id", username: "username")
   end
 end

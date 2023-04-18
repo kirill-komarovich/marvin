@@ -14,7 +14,7 @@ defmodule Marvin.TestTest do
   test "event/0 returns test event" do
     assert %Marvin.Event{} = event = Test.event()
 
-    assert event.adapter == Marvin.Adapter.Test
+    assert event.adapter == Marvin.Test.Adapter
     assert event.owner == self()
     assert event.platform == :test
     assert event.text == ""

@@ -2,11 +2,11 @@ defmodule Marvin.Test do
   import ExUnit.Assertions
 
   def event do
-    Marvin.Adapter.Test.event(%Marvin.Event{})
+    Marvin.Test.Adapter.event(%Marvin.Event{})
   end
 
   def from(attrs) do
-    Marvin.Adapter.Test.from(attrs)
+    Marvin.Test.Adapter.from(attrs)
   end
 
   defmacro handle(event, message, from \\ nil) do
@@ -21,7 +21,7 @@ defmodule Marvin.Test do
 
   def dispatch(event, endpoint, message, from) do
     event
-    |> Marvin.Adapter.Test.event(message, from)
+    |> Marvin.Test.Adapter.event(message, from)
     |> endpoint.call(endpoint.init([]))
   end
 

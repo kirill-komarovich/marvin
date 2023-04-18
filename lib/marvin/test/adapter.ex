@@ -1,9 +1,7 @@
-defmodule Marvin.Adapter.Test do
-  use Marvin.Adapter
+defmodule Marvin.Test.Adapter do
+  use Marvin.Adapter, platform: :test, name: "Test"
 
   alias Marvin.Test.Notifier
-
-  @platform :test
 
   def event(event, message \\ "", from \\ nil) do
     owner = self()
