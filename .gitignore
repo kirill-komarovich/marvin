@@ -25,3 +25,6 @@ marvin-*.tar
 /priv/plts/*.plt
 /priv/plts/*.plt.hash
 .env
+Dockerfile
+docker-compose.yml
+.dockerignore
