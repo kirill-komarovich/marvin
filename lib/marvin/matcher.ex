@@ -116,7 +116,6 @@ defmodule Marvin.Matcher do
 
       handle ~r/.*/, Marvin.Handlers.HelloHandler
       handle "/command", Marvin.Handlers.HelloHandler
-      handle ~m"hello [0-1=name]", Marvin.Handlers.HelloHandler, join: ""
     end
   """
   defmacro handle(pattern, handler, opts \\ []) do
