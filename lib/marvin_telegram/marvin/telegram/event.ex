@@ -92,5 +92,4 @@ defmodule Marvin.Telegram.Event do
       raw: raw
     }
   end
-
 end
