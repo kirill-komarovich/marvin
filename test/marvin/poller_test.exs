@@ -54,7 +54,7 @@ defmodule Marvin.PollerTest do
   test "init/2 logs poller start" do
     fun = fn -> TestPoller.init({Endpoint, []}) end
 
-    assert capture_log(fun) =~ ~r"\[info\]  Start poll with #{Adapter.name()}"u
+    assert capture_log(fun) =~ ~r"\[info\] Start poll with #{Adapter.name()}"u
   end
 
   test "__child_spec__/2 returns poller specification" do

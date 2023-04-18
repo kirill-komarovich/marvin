@@ -20,7 +20,7 @@ defmodule Marvin.Pipeline.LoggerTest do
       Enum.reduce(before_send, event, & &1.(&2))
     end
 
-    assert capture_log(fun) =~ ~r"\[info\]  Get #{@platform} update"u
-    assert capture_log(fun) =~ ~r"\[info\]  Finished in [0-9]+[m|µ]s"u
+    assert capture_log(fun) =~ ~r"\[info\] Get #{@platform} update"u
+    assert capture_log(fun) =~ ~r"\[info\] Finished in [0-9]+[m|µ]s"u
   end
 end
